@@ -12,7 +12,7 @@ HomeHero is a community-based platform that helps residents in small towns easil
 - **Sidhant Naik** – [GitHub](https://github.com/Sidnaik04)  
 - **Ivan Decunha** – [GitHub](https://github.com/)  
 - **Aryan Pagi** – [GitHub](https://github.com/)  
-- **Shreyas Devidas** – [GitHub](https://github.com/)  
+- **Shreyas Devidas** – [GitHub](https://github.com/Shreyas-Devidas)  
 
 ---
 
