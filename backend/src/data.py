@@ -1,0 +1,4 @@
+users = []
+providers = []
+bookings = []
+reviews = []
