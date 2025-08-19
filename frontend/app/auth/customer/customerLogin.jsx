@@ -2,10 +2,11 @@ import Checkbox from "expo-checkbox";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function customerLogin() {
   const [isChecked, setIsChecked] = useState(false);
-
+  const router =useRouter();
   return (
     <LinearGradient
       colors={["#1d1664", "#c3c0d6"]}
@@ -46,11 +47,29 @@ export default function customerLogin() {
       </View>
 
       <View className="mt-8">
-        <TouchableOpacity className="bg-[#00EAFF] p-3 w-1/2 m-auto rounded-xl">
+        <TouchableOpacity
+          className="bg-[#00EAFF] p-3 w-1/2 m-auto rounded-xl"
+          onPress={() => router.push("/auth/otpVerify")}
+        >
           <Text className="text-white text-center font-medium text-lg">
             Log in
           </Text>
         </TouchableOpacity>
+      </View>
+      <View>
+        <View className="flex-row items-center m-5">
+          <View className="flex-1 h-[1px] bg-gray-800 w-2/3" />
+          <Text className="mx-3 text-gray-900">or</Text>
+          <View className="flex-1 h-[1px] bg-gray-800" />
+        </View>
+        <View className="flex-row justify-center items-center mt-4">
+          <Text className="text-white">Don't have an account? </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/auth/customer/customerSignUp")}
+          >
+            <Text className="text-[#00EAFF] font-semibold">sign up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </LinearGradient>
   );
