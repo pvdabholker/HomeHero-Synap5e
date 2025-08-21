@@ -1,17 +1,17 @@
 from fastapi import FastAPI
-from src.routes import auth, customers, providers, admin
+from .database import engine
+from . import models
+from .routes import customers, providers, admin
 
-app = FastAPI(
-    title="HomeHero", description="API documentation for HomeHero", version="1.0.0"
-)
+models.Base.metadata.create_all(bind=engine)
 
-# Register routes
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(providers.router, prefix="/api", tags=["Customers"])
-app.include_router(providers.router, prefix="/api/provider", tags=["Providers"])
-app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app = FastAPI()
+
+app.include_router(customers.router, prefix="/api", tags=["customer"])
+app.include_router(providers.router, prefix="/api", tags=["provider"])
+app.include_router(admin.router, prefix="/api", tags=["admin"])
 
 
 @app.get("/")
-def root():
-    return {"message": "Welcome to HomeHero App"}
+def read_root():
+    return {"message": "Welcome to HomeHero API"}
