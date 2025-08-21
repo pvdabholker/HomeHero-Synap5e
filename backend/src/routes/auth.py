@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src import data
+from backend.src import database
 import uuid
 
 router = APIRouter()
@@ -16,7 +16,7 @@ def register_user(name: str, email: str, phone: str, user_type: str):
         "created_at": "2025-08-10",
     }
 
-    data.users.append(new_user)
+    database.users.append(new_user)
 
     return {"message": "Registerd successfully", "user_id": new_user["id"]}
 
