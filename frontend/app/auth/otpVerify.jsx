@@ -61,7 +61,7 @@ export default function otpVerify() {
       <View className="mt-8">
         <TouchableOpacity
           className="bg-[#00EAFF] p-3 w-1/2 m-auto rounded-xl"
-          onPress={() => router.push("/auth/otpVerify")}
+          onPress={() => router.push("/customerTabs/home")}
         >
           <Text className="text-white text-center font-medium text-lg">
             Continue
