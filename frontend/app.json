@@ -4,7 +4,7 @@
     "slug": "fixGoa",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    
     "scheme": "fixgoa",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

@@ -1,30 +1,38 @@
 import { View, Text, TouchableOpacity, ScrollView, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Ionicons} from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
-export default function BookStep4({ navigation }) {
+export default function BookStep4() {
   const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
+  const params = useLocalSearchParams(); // Changed from useSearchParams to useLocalSearchParams
+  const provider = params.provider;
+  const selectedProvider = provider ? JSON.parse(provider) : null;
+
+  const serviceDetails = {
+    service: "Plumbing",
+    dateTime: "Mon, August 25, 2025 at 9:32 AM",
+    location: "Margao Goa",
+  };
 
   return (
     <LinearGradient
-      colors={["#1e0a47", "#3c3b6e", "#6b6b9e"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
+      colors={["#1d1664", "#c3c0d6"]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       className="flex-1"
     >
       <ScrollView className="flex-1 px-6 pt-12">
         {/* Header */}
         <View className="flex-row items-center mb-6">
           <Ionicons name="arrow-back" size={24} color="white" />
-          <Text className="ml-3 text-lg font-semibold text-white">
-            Find Provider
-          </Text>
+          <Text className="ml-3 text-lg font-semibold text-white">Summary</Text>
         </View>
 
-        {/* Stepper */}
-        <View className="flex-row justify-between items-center mb-10">
+        {/* Steps */}
+        <View className="flex-row justify-between items-center mb-6">
           {["Step 1", "Step 2", "Step 3", "Step 4"].map((step, index) => (
             <View key={index} className="items-center flex-1">
               <View
@@ -44,17 +52,22 @@ export default function BookStep4({ navigation }) {
           ))}
         </View>
 
-        {/* Booking Details */}
+        {/* Divider */}
+        <View className="h-[1px] bg-white/40 mb-6" />
+
         <Text className="text-center text-white text-lg font-semibold mb-6">
           Booking Details
         </Text>
 
         <View className="flex-col space-y-4 gap-4 mb-6">
           {[
-            { label: "Service:", value: "Plumbing" },
-            { label: "Date & Time:", value: "Mon, August 25, 2025 at 9:32 AM" },
-            { label: "Location:", value: "Margao Goa" },
-            { label: "Provider:", value: "John Smith" },
+            { label: "Service:", value: serviceDetails.service },
+            { label: "Date & Time:", value: serviceDetails.dateTime },
+            { label: "Location:", value: serviceDetails.location },
+            {
+              label: "Provider:",
+              value: selectedProvider?.name || "Not selected",
+            },
           ].map((item, idx) => (
             <View key={idx} className="flex-row justify-between items-center">
               <Text className="text-white text-base">{item.label}</Text>
@@ -68,7 +81,6 @@ export default function BookStep4({ navigation }) {
           ))}
         </View>
 
-        {/* Confirm Button */}
         <TouchableOpacity
           onPress={() => setShowModal(true)}
           className="mt-10 bg-cyan-400 py-3 rounded-xl"
@@ -79,16 +91,13 @@ export default function BookStep4({ navigation }) {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Booking Confirmed Popup */}
       <Modal visible={showModal} transparent animationType="fade">
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="bg-white rounded-2xl p-6 w-80 items-center shadow-lg">
-            {/* Tick */}
             <View className="w-16 h-16 rounded-full bg-cyan-400 justify-center items-center mb-4">
               <Text className="text-white text-3xl">✓</Text>
             </View>
 
-            {/* Message */}
             <Text className="text-xl font-semibold mb-2 text-black">
               Booking Confirmed
             </Text>
@@ -96,11 +105,15 @@ export default function BookStep4({ navigation }) {
               Your request has been successfully placed
             </Text>
 
-            {/* Go to Home */}
             <TouchableOpacity
               onPress={() => {
                 setShowModal(false);
-                router.push("../home"); 
+                router.push({
+                  pathname: "/customerTabs/home",
+                  params: {
+                    provider: JSON.stringify(selectedProvider),
+                  },
+                });
               }}
               className="bg-cyan-400 py-3 px-6 rounded-xl w-full"
             >
