@@ -22,7 +22,7 @@ export default function SetLocation() {
 
   const [address, setAddress] = useState("");
 
-  // 🔹 Function to reverse geocode
+  // 🔹 Function to reverse geocode (can later move to backend or Google API service)
   const fetchAddress = async (lat, lng) => {
     try {
       let response = await fetch(
@@ -35,6 +35,12 @@ export default function SetLocation() {
     } catch (error) {
       console.log("Error fetching address:", error);
     }
+  };
+
+  // 🔹 Placeholder for saving address to backend
+  const saveAddress = () => {
+    console.log("Saving address:", address, marker);
+    // Later: API call to backend -> save address
   };
 
   return (
@@ -114,7 +120,10 @@ export default function SetLocation() {
       </View>
 
       {/* Saved Address */}
-      <TouchableOpacity className="bg-white rounded-xl px-4 py-3 flex-row items-center mb-4" onPress={(()=>router.push("/customerTabs/bookSteps/bookStep3"))}>
+      <TouchableOpacity
+        className="bg-white rounded-xl px-4 py-3 flex-row items-center mb-4"
+        onPress={() => router.push("/customerTabs/bookSteps/bookStep3")}
+      >
         <View className="bg-black w-8 h-8 rounded-full items-center justify-center mr-3">
           <Ionicons name="home" size={18} color="white" />
         </View>
@@ -127,7 +136,10 @@ export default function SetLocation() {
       </TouchableOpacity>
 
       {/* Add New Address */}
-      <TouchableOpacity className="bg-white rounded-xl px-4 py-3 flex-row items-center justify-center">
+      <TouchableOpacity
+        className="bg-white rounded-xl px-4 py-3 flex-row items-center justify-center"
+        onPress={saveAddress}
+      >
         <Ionicons name="add" size={20} color="black" />
         <Text className="ml-2 text-gray-700 font-medium">Add new address</Text>
       </TouchableOpacity>
