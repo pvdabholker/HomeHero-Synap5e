@@ -18,8 +18,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_WINDOW: int = 3600
 
     # environment
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    ENVIRONMENT: str = "production"
+    DEBUG: bool = False
+    PORT: int = 8000
 
     # Cloudinary:
     CLOUDINARY_CLOUD_NAME: Optional[str] = None
