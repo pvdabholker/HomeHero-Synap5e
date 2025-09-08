@@ -1,4 +1,0 @@
-users = []
-providers = []
-bookings = []
-reviews = []
