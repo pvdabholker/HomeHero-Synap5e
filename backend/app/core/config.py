@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # environment
     ENVIRONMENT: str = "production"
     DEBUG: bool = False
-    PORT: int = 8000
+    PORT: int = 10000
 
     # Cloudinary:
     CLOUDINARY_CLOUD_NAME: Optional[str] = None
