@@ -10,6 +10,7 @@ import {
 import React, { useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { api, TokenStore } from "../../lib/api";
 
 export default function OtpVerify() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -36,30 +37,20 @@ export default function OtpVerify() {
       return;
     }
 
+    const phone = TokenStore.getLastPhone();
+    if (!phone) {
+      Alert.alert("Missing phone", "Please login or signup again.");
+      return;
+    }
+
     setLoading(true);
     try {
-      // 🔹 Placeholder backend call
-      // Example:
-      // const res = await fetch("http://your-backend.com/verify-otp", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ otp: enteredOtp, phone: "+11234567890" }),
-      // });
-      // const data = await res.json();
-      // if (data.success) {
-      //   router.push("/customerTabs/home");
-      // } else {
-      //   Alert.alert("Invalid OTP", data.message);
-      // }
-
-      // Temporary success simulation
-      setTimeout(() => {
-        setLoading(false);
-        router.push("/customerTabs/home");
-      }, 1500);
+      await api.auth.verifyOtp({ phone, otp: enteredOtp });
+      setLoading(false);
+      router.push("/customerTabs/home");
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Something went wrong. Please try again later.");
+      Alert.alert("Invalid OTP", error.message || "Please try again later.");
       setLoading(false);
     }
   };
