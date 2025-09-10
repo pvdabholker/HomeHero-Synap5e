@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Ionicons,
@@ -7,29 +7,58 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { api } from "../../../lib/api";
 
 export default function BookService() {
-  const [selected, setSelected] = useState("Plumbing");
+  const params = useLocalSearchParams();
+  const initialCategory = typeof params.category === "string" ? params.category : "";
+  const [selected, setSelected] = useState(initialCategory || "");
+  const [services, setServices] = useState([]);
 
-  const services = [
-    {
-      name: "Cleaning",
-      icon: <FontAwesome5 name="broom" size={28} color="black" />,
-    },
-    {
-      name: "Plumbing",
-      icon: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
-    },
-    {
-      name: "Paint",
-      icon: <MaterialIcons name="format-paint" size={28} color="black" />,
-    },
-    {
-      name: "Carpentry",
-      icon: <MaterialCommunityIcons name="saw-blade" size={28} color="black" />,
-    },
-  ];
+  const iconFor = useMemo(
+    () => ({
+      electrical: (
+        <MaterialCommunityIcons name="lightning-bolt" size={28} color="black" />
+      ),
+      electrician: (
+        <MaterialCommunityIcons name="lightning-bolt" size={28} color="black" />
+      ),
+      plumbing: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
+      plumber: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
+      cleaning: <FontAwesome5 name="broom" size={28} color="black" />,
+      paint: <MaterialIcons name="format-paint" size={28} color="black" />,
+      painter: <MaterialIcons name="format-paint" size={28} color="black" />,
+      carpentry: (
+        <MaterialCommunityIcons name="saw-blade" size={28} color="black" />
+      ),
+      carpenter: (
+        <MaterialCommunityIcons name="saw-blade" size={28} color="black" />
+      ),
+      technician: <Ionicons name="construct" size={28} color="black" />,
+      default: <Ionicons name="grid" size={28} color="black" />,
+    }),
+    []
+  );
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const items = await api.services.getAll();
+        setServices(items || []);
+      } catch (e) {
+        setServices([]);
+      }
+    })();
+  }, []);
+
+  const onContinue = () => {
+    if (!selected) {
+      Alert.alert("Please select a service");
+      return;
+    }
+    router.push({ pathname: "/customerTabs/bookSteps/bookStep2", params: { service: selected } });
+  };
 
   return (
     <LinearGradient
@@ -77,33 +106,35 @@ export default function BookService() {
 
       {/* Service Options */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {services.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => setSelected(item.name)}
-            className={`flex-row items-center justify-center py-6 rounded-xl mb-4 ${
-              selected === item.name ? "bg-white" : "bg-white/20"
-            }`}
-          >
-            <View className="mr-3">{item.icon}</View>
-            <Text
-              className={`text-lg ${
-                selected === item.name
-                  ? "text-black font-semibold"
-                  : "text-white"
+        {services.map((item, index) => {
+          const name = item?.name || "";
+          const key = name.toLowerCase();
+          const icon = iconFor[key] || iconFor.default;
+          return (
+            <TouchableOpacity
+              key={`${key}-${index}`}
+              onPress={() => setSelected(name)}
+              className={`flex-row items-center justify-center py-6 rounded-xl mb-4 ${
+                selected === name ? "bg-white" : "bg-white/20"
               }`}
             >
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <View className="mr-3">{icon}</View>
+              <Text
+                className={`text-lg ${
+                  selected === name
+                    ? "text-black font-semibold"
+                    : "text-white"
+                }`}
+              >
+                {name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       {/* Continue Button */}
-      <TouchableOpacity
-        className="mt-auto mb-12"
-        onPress={() => router.push("/customerTabs/bookSteps/bookStep2")}
-      >
+      <TouchableOpacity className="mt-auto mb-12" onPress={onContinue}>
         <LinearGradient
           colors={["#00c6ff", "#00aaff"]}
           start={{ x: 0, y: 0 }}
