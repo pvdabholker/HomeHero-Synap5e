@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
-// import AsyncStorage from "@react-native-async-storage/async-storage"; // uncomment when integrating
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api, TokenStore } from "../../../lib/api";
 
 export default function CustomerLogin() {
@@ -29,10 +29,30 @@ export default function CustomerLogin() {
 
     setLoading(true);
     try {
-      await api.auth.login({ email_or_phone: emailOrPhone.trim(), password });
-      // TODO: If remember me is needed, persist tokens via AsyncStorage
+      const response = await api.auth.login({
+        email_or_phone: emailOrPhone.trim(),
+        password,
+      });
+
+
+      // Store auth data from the response
+      if (response?.access_token) {
+        await AsyncStorage.setItem("token", response.access_token);
+        await AsyncStorage.setItem("refresh_token", response.refresh_token);
+        await AsyncStorage.setItem("token_type", response.token_type);
+        await AsyncStorage.setItem("isLoggedIn", "true");
+        if (isChecked) {
+          await AsyncStorage.setItem("rememberMe", "true");
+        }
+        // Store token in TokenStore as well
+        TokenStore.token = response.access_token;
+      } else {
+        console.error("Response structure:", response);
+        throw new Error("Login failed - Invalid response format");
+      }
+
       setLoading(false);
-      router.push("/auth/otpVerify");
+      router.replace("/customerTabs/home");
     } catch (error) {
       console.error(error);
       Alert.alert("Login Failed", error.message || "Please try again later.");

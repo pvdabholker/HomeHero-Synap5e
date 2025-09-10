@@ -16,27 +16,32 @@ export default function Dashboard() {
 
   // Simulate API call on mount
   useEffect(() => {
-    // Example: Replace with your backend API calls
     const fetchDashboardData = async () => {
       try {
-        // Fetch data from API
-        // const response = await fetch("https://your-backend.com/dashboard");
-        // const data = await response.json();
+        const [
+          usersResponse,
+          providersResponse,
+          bookingsResponse,
+          approvalsResponse,
+        ] = await Promise.all([
+          fetch("http://localhost:3001/api/admin/total-users"),
+          fetch("http://localhost:3001/api/admin/total-providers"),
+          fetch("http://localhost:3001/api/admin/active-bookings"),
+          fetch("http://localhost:3001/api/admin/pending-approvals"),
+        ]);
 
-        // Example dummy data (replace with API response)
-        const data = {
-          totalUsers: 1200,
-          totalProviders: 300,
-          activeBookings: 450,
-          pendingApprovals: 25,
-        };
+        const users = await usersResponse.json();
+        const providers = await providersResponse.json();
+        const bookings = await bookingsResponse.json();
+        const approvals = await approvalsResponse.json();
 
-        setTotalUsers(data.totalUsers);
-        setTotalProviders(data.totalProviders);
-        setActiveBookings(data.activeBookings);
-        setPendingApprovals(data.pendingApprovals);
+        setTotalUsers(users.count || 0);
+        setTotalProviders(providers.count || 0);
+        setActiveBookings(bookings.count || 0);
+        setPendingApprovals(approvals.count || 0);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
+        Alert.alert("Error", "Failed to load dashboard data");
       }
     };
 

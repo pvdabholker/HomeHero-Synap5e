@@ -1,4 +1,13 @@
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  TextInput,
+  Alert,
+  DeviceEventEmitter,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,7 +38,9 @@ export default function BookStep4() {
       if (!displayAddress) {
         try {
           const me = await api.users.me();
-          setDisplayAddress([me?.location, me?.pincode].filter(Boolean).join(", "));
+          setDisplayAddress(
+            [me?.location, me?.pincode].filter(Boolean).join(", ")
+          );
         } catch (e) {}
       }
     })();
@@ -50,6 +61,8 @@ export default function BookStep4() {
       await api.bookings.create(payload);
       // Show confirmation popup then navigate to Home
       setShowModal(true);
+      // Emit event to refresh bookings list
+      DeviceEventEmitter.emit("BOOKING_CONFIRMED");
       setTimeout(() => {
         setShowModal(false);
         router.push({ pathname: "/customerTabs/home" });
@@ -58,7 +71,10 @@ export default function BookStep4() {
       const msg = e?.message || "Failed to create booking";
       if (msg.toLowerCase().includes("unauthorized") || msg.includes("401")) {
         Alert.alert("Login required", "Please log in to place a booking.", [
-          { text: "OK", onPress: () => router.replace("/auth/customer/customerLogin") },
+          {
+            text: "OK",
+            onPress: () => router.replace("/auth/customer/customerLogin"),
+          },
         ]);
       } else {
         Alert.alert("Error", msg);
@@ -110,30 +126,70 @@ export default function BookStep4() {
 
         {/* Provider details */}
         <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base font-semibold mb-2">Provider</Text>
-          <Text className="text-white">{selectedProvider?.user?.name || selectedProvider?.name || "Provider"}</Text>
-          <Text className="text-gray-200 text-sm">{selectedProvider?.service_type || service || "Service"}</Text>
+          <Text className="text-white text-base font-semibold mb-2">
+            Provider
+          </Text>
+          <Text className="text-white">
+            {selectedProvider?.user?.name ||
+              selectedProvider?.name ||
+              "Provider"}
+          </Text>
+          <Text className="text-gray-200 text-sm">
+            {selectedProvider?.service_type || service || "Service"}
+          </Text>
         </View>
 
         {/* Service and Address display */}
         <View className="bg-white/20 rounded-2xl p-4 mb-6">
           <Text className="text-white text-base">Service</Text>
-          <Text className="text-gray-200 mt-1">{selectedProvider?.service_type || service || "Service"}</Text>
+          <Text className="text-gray-200 mt-1">
+            {selectedProvider?.service_type || service || "Service"}
+          </Text>
           <Text className="text-white text-base mt-4">Location</Text>
-          <Text className="text-gray-200 mt-1">{displayAddress || "Not set"}</Text>
+          <Text className="text-gray-200 mt-1">
+            {displayAddress || "Not set"}
+          </Text>
         </View>
 
-        {/* Date & Time only */}
+        {/* Date & Time Selection */}
         <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base font-semibold mb-2">Date & Time</Text>
-          <TextInput
-            value={dateTime}
-            onChangeText={setDateTime}
-            placeholder="YYYY-MM-DDTHH:mm"
-            placeholderTextColor="#ddd"
-            className="bg-white rounded-xl px-3 py-2 text-gray-800"
-          />
-          <Text className="text-gray-300 text-xs mt-1">Format: YYYY-MM-DDTHH:mm (24h)</Text>
+          <Text className="text-white text-base font-semibold mb-2">
+            Date & Time
+          </Text>
+          <View className="flex-row space-x-2 gap-2">
+            <View className="flex-1">
+              <Text className="text-white text-sm mb-1">Date</Text>
+              <TextInput
+                value={dateTime.split("T")[0]}
+                onChangeText={(date) =>
+                  setDateTime(date + "T" + (dateTime.split("T")[1] || "00:00"))
+                }
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#ddd"
+                className="bg-white rounded-xl px-3 py-2 text-gray-800"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-white text-sm mb-1">Time</Text>
+              <TextInput
+                value={dateTime.split("T")[1]}
+                onChangeText={(time) =>
+                  setDateTime(
+                    (dateTime.split("T")[0] ||
+                      new Date().toISOString().split("T")[0]) +
+                      "T" +
+                      time
+                  )
+                }
+                placeholder="HH:mm"
+                placeholderTextColor="#ddd"
+                className="bg-white rounded-xl px-3 py-2 text-gray-800"
+              />
+            </View>
+          </View>
+          <Text className="text-gray-300 text-xs mt-2">
+            Time format: 24-hour (e.g., 14:30 for 2:30 PM)
+          </Text>
         </View>
 
         <TouchableOpacity

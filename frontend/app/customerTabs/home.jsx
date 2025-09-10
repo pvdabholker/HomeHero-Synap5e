@@ -43,6 +43,7 @@ export default function HomeScreen() {
       plumbing: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
       plumber: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
       cleaning: <FontAwesome5 name="broom" size={26} color="black" />,
+      cleaner: <FontAwesome5 name="broom" size={26} color="black" />,
       paint: <MaterialIcons name="format-paint" size={26} color="black" />,
       painter: <MaterialIcons name="format-paint" size={26} color="black" />,
       laundry: <FontAwesome5 name="tshirt" size={24} color="black" />,
@@ -53,24 +54,53 @@ export default function HomeScreen() {
         <MaterialCommunityIcons name="saw-blade" size={28} color="black" />
       ),
       technician: <Ionicons name="construct" size={28} color="black" />,
-      default: <Ionicons name="grid" size={28} color="black" />,
+      ac_technician: (
+        <MaterialCommunityIcons
+          name="air-conditioner"
+          size={28}
+          color="black"
+        />
+      ),
+      gardener: (
+        <MaterialCommunityIcons name="flower" size={28} color="black" />
+      ),
+      gardening: (
+        <MaterialCommunityIcons name="flower" size={28} color="black" />
+      ),
+      default: <Ionicons name="construct" size={28} color="black" />,
     }),
     []
   );
 
-  // Listen for profile updates to update greeting/avatar immediately
+  // Listen for profile updates and booking updates
   useEffect(() => {
-    const sub1 = DeviceEventEmitter.addListener("USER_AVATAR_UPDATED", ({ avatar_url }) => {
-      setAvatarUrl(avatar_url || "");
+    loadMe();
+    fetchUpcomingBookings(); // Initial fetch
+
+    const sub1 = DeviceEventEmitter.addListener(
+      "USER_AVATAR_UPDATED",
+      ({ avatar_url }) => {
+        setAvatarUrl(avatar_url || "");
+      }
+    );
+    const sub2 = DeviceEventEmitter.addListener(
+      "USER_PROFILE_UPDATED",
+      ({ name }) => {
+        if (name) setUserName(name);
+      }
+    );
+    const sub3 = DeviceEventEmitter.addListener("BOOKING_CONFIRMED", () => {
+      setTimeout(() => {
+        fetchUpcomingBookings();
+      }, 500);
     });
-    const sub2 = DeviceEventEmitter.addListener("USER_PROFILE_UPDATED", ({ name }) => {
-      if (name) setUserName(name);
-    });
+
     return () => {
       sub1.remove();
       sub2.remove();
+      sub3.remove();
     };
-  }, []);
+  }, [loadMe, fetchUpcomingBookings]);
 
   // Double-press back to exit on Android when on Home
   useFocusEffect(
@@ -90,7 +120,10 @@ export default function HomeScreen() {
         return false;
       };
 
-      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
       return () => subscription.remove();
     }, [backPressedOnce])
   );
@@ -135,37 +168,10 @@ export default function HomeScreen() {
     try {
       const list = await api.bookings.my();
       if (Array.isArray(list)) {
-        const now = new Date();
         const upcoming = list
-          .filter((b) => {
-            try {
-              return new Date(b.date_time) >= now;
-            } catch {
-              return false;
-            }
-          })
-          .sort((a, b) => new Date(a.date_time) - new Date(b.date_time))
-          .slice(0, 10);
-
-        const uniqueProviderIds = [
-          ...new Set(upcoming.map((b) => b.provider_id).filter(Boolean)),
-        ];
-        const idToProvider = {};
-        await Promise.all(
-          uniqueProviderIds.map(async (pid) => {
-            try {
-              const p = await api.providers.getById(pid);
-              idToProvider[pid] = p;
-            } catch {}
-          })
-        );
-
-        const enriched = upcoming.map((b) => ({
-          ...b,
-          provider: idToProvider[b.provider_id] || null,
-        }));
-
-        setUpcomingList(enriched);
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 5);
+        setUpcomingList(upcoming);
       } else {
         setUpcomingList([]);
       }
@@ -173,10 +179,6 @@ export default function HomeScreen() {
       setUpcomingList([]);
     }
   }, []);
-
-  useEffect(() => {
-    fetchUpcomingBookings();
-  }, [fetchUpcomingBookings]);
 
   useFocusEffect(
     useCallback(() => {
@@ -186,7 +188,10 @@ export default function HomeScreen() {
 
   const handleSearch = async () => {
     try {
-      const providers = await api.providers.search({ service: search, limit: 10 });
+      const providers = await api.providers.search({
+        service: search,
+        limit: 10,
+      });
       Alert.alert("Results", `Found ${providers?.length || 0} providers`);
     } catch (e) {
       Alert.alert("Search failed", e.message || "Please try again");
@@ -219,9 +224,7 @@ export default function HomeScreen() {
       {/* Header */}
       <View className="px-5 pt-14 flex-row items-center space-x-3">
         <Image
-          source={
-            avatarUrl ? { uri: avatarUrl } : undefined
-          }
+          source={avatarUrl ? { uri: avatarUrl } : undefined}
           className="w-12 h-12 rounded-full bg-gray-300"
         />
         <View>
@@ -255,7 +258,7 @@ export default function HomeScreen() {
         <Text className="text-lg font-semibold text-white">Categories</Text>
         <View className="flex-row flex-wrap mt-4">
           {categories.map((item, index) => {
-            const key = (item?.name || "").toLowerCase();
+            const key = (item?.name || "").toLowerCase().replace(/[^a-z]/g, "");
             const icon = iconFor[key] || iconFor.default;
             return (
               <TouchableOpacity
@@ -279,9 +282,11 @@ export default function HomeScreen() {
         </View>
 
         {/* Upcoming Bookings (scrollable horizontally) */}
-        {upcomingList.length > 0 ? (
+        {upcomingList && upcomingList.length > 0 ? (
           <View className="mt-4 mb-8">
-            <Text className="text-white text-xl font-semibold mb-3">Upcoming Bookings</Text>
+            <Text className="text-white text-xl font-semibold mb-3">
+              Upcoming Bookings ({upcomingList.length})
+            </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {upcomingList.map((b) => (
                 <View
@@ -290,19 +295,28 @@ export default function HomeScreen() {
                 >
                   <View className="flex-row items-center mb-2">
                     <Image
-                      source={{ uri: b?.provider?.user?.avatar_url || "https://via.placeholder.com/50" }}
+                      source={{
+                        uri:
+                          b?.provider?.user?.avatar_url ||
+                          "https://via.placeholder.com/50",
+                      }}
                       className="w-10 h-10 rounded-lg mr-3 bg-white"
                     />
                     <View className="flex-1">
-                      <Text className="text-white font-semibold" numberOfLines={1}>
-                        {b?.provider?.user?.name || "Provider"}
+                      <Text
+                        className="text-white font-semibold"
+                        numberOfLines={1}
+                      >
+                        {b?.service_type || "Service"}
                       </Text>
                       <Text className="text-gray-200" numberOfLines={1}>
-                        {b?.service_type || "Service"}
+                        Status: {b?.status || "pending"}
                       </Text>
                     </View>
                   </View>
-                  <Text className="text-gray-200" numberOfLines={1}>{formatDate(b?.date_time)}</Text>
+                  <Text className="text-gray-200" numberOfLines={1}>
+                    {formatDate(b?.date_time)}
+                  </Text>
                 </View>
               ))}
             </ScrollView>

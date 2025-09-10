@@ -12,7 +12,8 @@ import { api } from "../../../lib/api";
 
 export default function BookService() {
   const params = useLocalSearchParams();
-  const initialCategory = typeof params.category === "string" ? params.category : "";
+  const initialCategory =
+    typeof params.category === "string" ? params.category : "";
   const [selected, setSelected] = useState(initialCategory || "");
   const [services, setServices] = useState([]);
 
@@ -26,9 +27,11 @@ export default function BookService() {
       ),
       plumbing: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
       plumber: <MaterialCommunityIcons name="pipe" size={28} color="black" />,
-      cleaning: <FontAwesome5 name="broom" size={28} color="black" />,
-      paint: <MaterialIcons name="format-paint" size={28} color="black" />,
-      painter: <MaterialIcons name="format-paint" size={28} color="black" />,
+      cleaning: <FontAwesome5 name="broom" size={26} color="black" />,
+      cleaner: <FontAwesome5 name="broom" size={26} color="black" />,
+      paint: <MaterialIcons name="format-paint" size={26} color="black" />,
+      painter: <MaterialIcons name="format-paint" size={26} color="black" />,
+      laundry: <FontAwesome5 name="tshirt" size={24} color="black" />,
       carpentry: (
         <MaterialCommunityIcons name="saw-blade" size={28} color="black" />
       ),
@@ -36,7 +39,20 @@ export default function BookService() {
         <MaterialCommunityIcons name="saw-blade" size={28} color="black" />
       ),
       technician: <Ionicons name="construct" size={28} color="black" />,
-      default: <Ionicons name="grid" size={28} color="black" />,
+      ac_technician: (
+        <MaterialCommunityIcons
+          name="air-conditioner"
+          size={28}
+          color="black"
+        />
+      ),
+      gardener: (
+        <MaterialCommunityIcons name="flower" size={28} color="black" />
+      ),
+      gardening: (
+        <MaterialCommunityIcons name="flower" size={28} color="black" />
+      ),
+      default: <Ionicons name="construct" size={28} color="black" />,
     }),
     []
   );
@@ -57,7 +73,10 @@ export default function BookService() {
       Alert.alert("Please select a service");
       return;
     }
-    router.push({ pathname: "/customerTabs/bookSteps/bookStep2", params: { service: selected } });
+    router.push({
+      pathname: "/customerTabs/bookSteps/bookStep2",
+      params: { service: selected },
+    });
   };
 
   return (
@@ -121,9 +140,7 @@ export default function BookService() {
               <View className="mr-3">{icon}</View>
               <Text
                 className={`text-lg ${
-                  selected === name
-                    ? "text-black font-semibold"
-                    : "text-white"
+                  selected === name ? "text-black font-semibold" : "text-white"
                 }`}
               >
                 {name}

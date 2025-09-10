@@ -73,12 +73,12 @@ export default function Profile() {
     {
       icon: <Ionicons name="notifications-outline" size={26} color="#1d1664" />,
       title: "Notifications",
-      route: "/customerTabs/notifications",
+      route: "/customerTabs/notification",
     },
     {
       icon: <MaterialIcons name="help-outline" size={26} color="#1d1664" />,
       title: "Help & Support",
-      route: "/customerTabs/support",
+      route: "/customerTabs/helpAndSupport",
     },
     {
       icon: <MaterialIcons name="settings" size={26} color="#1d1664" />,

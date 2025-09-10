@@ -13,12 +13,12 @@ import { useRouter } from "expo-router";
 export default function AdminLogin() {
   const router = useRouter();
 
-  const [phone, setPhone] = useState("");
+  const [phoneOrEmail, setPhoneOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!phone || !password) {
+    if (!phoneOrEmail || !password) {
       Alert.alert("Error", "Please fill in both fields");
       return;
     }
@@ -64,11 +64,11 @@ export default function AdminLogin() {
         </Text>
 
         <TextInput
-          placeholder="Phone Number"
-          value={phone}
-          onChangeText={setPhone}
+          placeholder="Phone Number or Email"
+          value={phoneOrEmail}
+          onChangeText={setPhoneOrEmail}
           className="bg-gray-200 px-4 py-3 rounded-lg mb-4"
-          keyboardType="phone-pad"
+          keyboardType="email-address"
         />
 
         <TextInput
