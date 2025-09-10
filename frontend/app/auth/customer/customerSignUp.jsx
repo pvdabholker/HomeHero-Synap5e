@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import Checkbox from "expo-checkbox";
+import { api } from "../../../lib/api";
 
 export default function CustomerSignUp() {
   const router = useRouter();
@@ -38,28 +39,18 @@ export default function CustomerSignUp() {
 
     setLoading(true);
     try {
-      // 🔹 Backend integration placeholder
-      // const res = await fetch("http://your-backend.com/customer-signup", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ fullName, phone, email, password }),
-      // });
-      // const data = await res.json();
-      //
-      // if (data.success) {
-      //   router.push("/auth/otpVerify");
-      // } else {
-      //   Alert.alert("Sign Up Failed", data.message);
-      // }
-
-      // 🔹 Temporary simulation
-      setTimeout(() => {
-        setLoading(false);
-        router.push("/auth/otpVerify");
-      }, 1500);
+      await api.auth.register({
+        name: fullName,
+        phone,
+        email,
+        password,
+        user_type: "customer",
+      });
+      setLoading(false);
+      router.push("/auth/otpVerify");
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Something went wrong. Please try again later.");
+      Alert.alert("Sign Up Failed", error.message || "Please try again later.");
       setLoading(false);
     }
   };
