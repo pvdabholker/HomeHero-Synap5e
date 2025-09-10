@@ -100,7 +100,10 @@ export default function BookService() {
       </ScrollView>
 
       {/* Continue Button */}
-      <TouchableOpacity className="mt-auto mb-12" onPress={(()=>router.push("/customerTabs/bookSteps/bookStep2"))}>
+      <TouchableOpacity
+        className="mt-auto mb-12"
+        onPress={() => router.push("/customerTabs/bookSteps/bookStep2")}
+      >
         <LinearGradient
           colors={["#00c6ff", "#00aaff"]}
           start={{ x: 0, y: 0 }}
