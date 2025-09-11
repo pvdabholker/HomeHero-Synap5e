@@ -132,7 +132,7 @@ export default function Notifications() {
       className="flex-1"
     >
       {/* Header */}
-      <View className="px-5 pt-14 flex-row items-center justify-between mb-6">
+      <View className="px-5 pt-12 flex-row items-center justify-between mb-6">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="white" />

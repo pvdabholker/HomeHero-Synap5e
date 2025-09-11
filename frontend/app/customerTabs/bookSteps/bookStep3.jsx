@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -23,30 +31,67 @@ export default function BookStep3() {
 
         const serviceQuery = (service || "").toString().trim().toLowerCase();
 
-        // Try enhanced search: service + location
+        // Try enhanced search: service + location with pricing
         let results = await api.providers.search({
           service: serviceQuery || undefined,
           location: locationParam,
           available_only: false,
+          include_pricing: true, // Request pricing information
           limit: 20,
         });
 
-        // Fallback: search only by location (ignore service)
+        // Fallback: search only by location (ignore service) with pricing
         if (!results || results.length === 0) {
           results = await api.providers.search({
             location: locationParam,
             available_only: false,
+            include_pricing: true,
             limit: 20,
           });
         }
 
-        // Fallback: plain list, no filters
+        // Fallback: plain list, no filters but with pricing
         if (!results || results.length === 0) {
-          results = await api.providers.list({ limit: 20 });
+          results = await api.providers.list({
+            limit: 20,
+            include_pricing: true,
+          });
         }
 
-        setProviders(Array.isArray(results) ? results : []);
+        // If we have providers, fetch detailed pricing for each
+        if (Array.isArray(results) && results.length > 0) {
+          const providersWithPricing = await Promise.all(
+            results.map(async (provider) => {
+              try {
+                // Fetch detailed provider info including pricing
+                const detailedProvider = await api.providers.getById(
+                  provider.provider_id || provider.id
+                );
+                return {
+                  ...provider,
+                  ...detailedProvider,
+                  // Merge pricing information
+                  pricing: detailedProvider?.pricing || provider?.pricing,
+                  hourly_rate:
+                    detailedProvider?.hourly_rate || provider?.hourly_rate,
+                  base_price:
+                    detailedProvider?.base_price || provider?.base_price,
+                  minimum_charge:
+                    detailedProvider?.minimum_charge ||
+                    provider?.minimum_charge,
+                };
+              } catch (e) {
+                // If individual provider fetch fails, return original data
+                return provider;
+              }
+            })
+          );
+          setProviders(providersWithPricing);
+        } else {
+          setProviders([]);
+        }
       } catch (e) {
+        console.error("Error fetching providers:", e);
         setProviders([]);
       } finally {
         setLoading(false);
@@ -109,14 +154,22 @@ export default function BookStep3() {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : providers.length === 0 ? (
-          <Text className="text-white text-center mt-6">No providers found.</Text>
+          <Text className="text-white text-center mt-6">
+            No providers found.
+          </Text>
         ) : (
           providers.map((p) => (
-            <View key={p?.provider_id || p?.id} className="bg-white/20 rounded-2xl p-4 mb-5">
+            <View
+              key={p?.provider_id || p?.id}
+              className="bg-white/20 rounded-2xl p-4 mb-5"
+            >
               <View className="flex-row justify-between items-center">
                 <View className="flex-row items-center">
                   <Image
-                    source={{ uri: p?.user?.avatar_url || "https://via.placeholder.com/50" }}
+                    source={{
+                      uri:
+                        p?.user?.avatar_url || "https://via.placeholder.com/50",
+                    }}
                     className="w-12 h-12 rounded-full mr-3"
                   />
                   <View>
@@ -126,6 +179,16 @@ export default function BookStep3() {
                     <Text className="text-gray-200 text-sm">
                       {p?.service_type || service || "Service"}
                     </Text>
+                    {/* Display charges from backend */}
+                    <Text className="text-green-300 text-sm font-medium">
+                      {p?.hourly_rate
+                        ? `₹${p.hourly_rate}/hr`
+                        : p?.pricing?.hourly_rate
+                          ? `₹${p.pricing.hourly_rate}/hr`
+                          : p?.base_price
+                            ? `₹${p.base_price}`
+                            : "Price on request"}
+                    </Text>
                   </View>
                 </View>
                 <View className="flex-row items-center">
@@ -133,6 +196,16 @@ export default function BookStep3() {
                   <Text className="text-white ml-1">{p?.rating ?? "4.0"}</Text>
                 </View>
               </View>
+
+              {/* Additional pricing info if available */}
+              {(p?.minimum_charge || p?.base_price) && (
+                <View className="mt-3 bg-white/10 rounded-lg p-2">
+                  <Text className="text-white text-xs">
+                    Minimum charge: ₹
+                    {p?.minimum_charge || p?.base_price || "200"}
+                  </Text>
+                </View>
+              )}
 
               <TouchableOpacity
                 className="mt-4 bg-white rounded-xl py-2 flex-row items-center justify-center"

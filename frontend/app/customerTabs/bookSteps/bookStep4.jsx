@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "../../../lib/api";
+import { showErrorAlert } from "../../../lib/alerts";
 
 export default function BookStep4() {
   const [showModal, setShowModal] = useState(false);
@@ -25,12 +26,42 @@ export default function BookStep4() {
 
   const [dateTime, setDateTime] = useState("");
   const [displayAddress, setDisplayAddress] = useState(addressParam);
+  const [selectedTime, setSelectedTime] = useState(""); // For 12-hour display
+  const [isAM, setIsAM] = useState(true);
+
+  // Helper function to convert 24-hour to 12-hour format
+  const convertTo12Hour = (time24) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(":");
+    const hour24 = parseInt(hours);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? "PM" : "AM";
+    return { time: `${hour12}:${minutes}`, isAM: ampm === "AM" };
+  };
+
+  // Helper function to convert 12-hour to 24-hour format
+  const convertTo24Hour = (time12, isAM) => {
+    if (!time12) return "00:00";
+    const [hours, minutes] = time12.split(":");
+    let hour24 = parseInt(hours);
+    if (isAM && hour24 === 12) hour24 = 0;
+    if (!isAM && hour24 !== 12) hour24 += 12;
+    return `${hour24.toString().padStart(2, "0")}:${minutes}`;
+  };
 
   useEffect(() => {
     const nextHour = new Date(Date.now() + 60 * 60 * 1000)
       .toISOString()
       .slice(0, 16); // yyyy-MM-ddTHH:mm
     setDateTime(nextHour);
+
+    // Initialize 12-hour time display
+    const time24 = nextHour.split("T")[1];
+    if (time24) {
+      const { time, isAM: am } = convertTo12Hour(time24);
+      setSelectedTime(time);
+      setIsAM(am);
+    }
   }, []);
 
   useEffect(() => {
@@ -49,7 +80,7 @@ export default function BookStep4() {
   const createBooking = async () => {
     try {
       if (!selectedProvider) {
-        Alert.alert("Select provider", "Please go back and select a provider.");
+        showErrorAlert("Please go back and select a provider.");
         return;
       }
       const isoDate = new Date(dateTime).toISOString();
@@ -77,7 +108,7 @@ export default function BookStep4() {
           },
         ]);
       } else {
-        Alert.alert("Error", msg);
+        showErrorAlert(msg);
       }
     }
   };
@@ -137,6 +168,30 @@ export default function BookStep4() {
           <Text className="text-gray-200 text-sm">
             {selectedProvider?.service_type || service || "Service"}
           </Text>
+
+          {/* Display pricing */}
+          <View className="mt-3 pt-3 border-t border-white/20">
+            <Text className="text-white text-sm font-medium mb-1">Pricing</Text>
+            <Text className="text-green-300 text-base font-semibold">
+              {selectedProvider?.hourly_rate
+                ? `₹${selectedProvider.hourly_rate}/hr`
+                : selectedProvider?.pricing?.hourly_rate
+                  ? `₹${selectedProvider.pricing.hourly_rate}/hr`
+                  : selectedProvider?.base_price
+                    ? `₹${selectedProvider.base_price}`
+                    : "Price on request"}
+            </Text>
+
+            {/* Show minimum charge if available */}
+            {(selectedProvider?.minimum_charge ||
+              selectedProvider?.base_price) && (
+              <Text className="text-gray-300 text-xs mt-1">
+                Minimum charge: ₹
+                {selectedProvider?.minimum_charge ||
+                  selectedProvider?.base_price}
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* Service and Address display */}
@@ -161,9 +216,10 @@ export default function BookStep4() {
               <Text className="text-white text-sm mb-1">Date</Text>
               <TextInput
                 value={dateTime.split("T")[0]}
-                onChangeText={(date) =>
-                  setDateTime(date + "T" + (dateTime.split("T")[1] || "00:00"))
-                }
+                onChangeText={(date) => {
+                  const time24 = convertTo24Hour(selectedTime, isAM);
+                  setDateTime(date + "T" + time24);
+                }}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor="#ddd"
                 className="bg-white rounded-xl px-3 py-2 text-gray-800"
@@ -171,24 +227,41 @@ export default function BookStep4() {
             </View>
             <View className="flex-1">
               <Text className="text-white text-sm mb-1">Time</Text>
-              <TextInput
-                value={dateTime.split("T")[1]}
-                onChangeText={(time) =>
-                  setDateTime(
-                    (dateTime.split("T")[0] ||
-                      new Date().toISOString().split("T")[0]) +
-                      "T" +
-                      time
-                  )
-                }
-                placeholder="HH:mm"
-                placeholderTextColor="#ddd"
-                className="bg-white rounded-xl px-3 py-2 text-gray-800"
-              />
+              <View className="flex-row gap-1">
+                <TextInput
+                  value={selectedTime}
+                  onChangeText={(time) => {
+                    setSelectedTime(time);
+                    const time24 = convertTo24Hour(time, isAM);
+                    const date =
+                      dateTime.split("T")[0] ||
+                      new Date().toISOString().split("T")[0];
+                    setDateTime(date + "T" + time24);
+                  }}
+                  placeholder="12:00"
+                  placeholderTextColor="#ddd"
+                  className="bg-white rounded-xl px-3 py-2 text-gray-800 flex-1"
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsAM(!isAM);
+                    const time24 = convertTo24Hour(selectedTime, !isAM);
+                    const date =
+                      dateTime.split("T")[0] ||
+                      new Date().toISOString().split("T")[0];
+                    setDateTime(date + "T" + time24);
+                  }}
+                  className="bg-white rounded-xl px-3 py-2 justify-center"
+                >
+                  <Text className="text-gray-800 font-medium">
+                    {isAM ? "AM" : "PM"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
           <Text className="text-gray-300 text-xs mt-2">
-            Time format: 24-hour (e.g., 14:30 for 2:30 PM)
+            Time format: 12-hour (e.g., 2:30 PM)
           </Text>
         </View>
 

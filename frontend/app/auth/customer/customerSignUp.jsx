@@ -66,13 +66,13 @@ export default function CustomerSignUp() {
       <View className="flex justify-center items-center">
         <Image
           source={require("../../../assets/images/signup.jpg")}
-          className="h-[200px] w-[200px] mt-24"
+          className="h-[180px] w-[180px] mt-24"
           resizeMode="contain"
         />
       </View>
 
       {/* Inputs */}
-      <View className="mt-14 flex flex-col gap-6">
+      <View className="mt-12 flex flex-col gap-5">
         <TextInput
           className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
           placeholder="Full Name"
