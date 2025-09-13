@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -154,7 +154,7 @@ async def respond_to_booking(
 # cancel booking customer only
 @router.delete("/{booking_id}", response_model=dict)
 async def cancel_booking(
-    request,
+    request: Request,
     booking_id: str,
     cancellation: BookingCancellation,
     current_user: User = Depends(get_current_customer),
@@ -188,7 +188,7 @@ async def cancel_booking(
 # reshedule a booking to new date/time
 @router.put("/{booking_id}/reschedule", response_model=dict)
 async def reshedule_booking(
-    request,
+    request: Request,
     booking_id: str,
     reschedule_data: BookingReshedule,
     current_user: User = Depends(get_current_customer),
@@ -262,7 +262,7 @@ async def check_cancellation_allowed(
 # cancel booking provider only
 @router.delete("/{booking_id}/provider-cancel", response_model=dict)
 async def provider_cancel_booking(
-    request,
+    request: Request,
     booking_id: str,
     cancellation: BookingCancellation,
     current_user: User = Depends(get_current_provider),
