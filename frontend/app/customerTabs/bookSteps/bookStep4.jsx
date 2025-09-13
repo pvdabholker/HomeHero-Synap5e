@@ -1,69 +1,20 @@
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { api } from "../../../lib/api";
 
 export default function BookStep4() {
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const providerParam = params.provider;
-  const selectedProvider = providerParam ? JSON.parse(providerParam) : null;
-  const service = typeof params.service === "string" ? params.service : "";
-  const addressParam = typeof params.address === "string" ? params.address : "";
+  const params = useLocalSearchParams(); // Changed from useSearchParams to useLocalSearchParams
+  const provider = params.provider;
+  const selectedProvider = provider ? JSON.parse(provider) : null;
 
-  const [dateTime, setDateTime] = useState("");
-  const [displayAddress, setDisplayAddress] = useState(addressParam);
-
-  useEffect(() => {
-    const nextHour = new Date(Date.now() + 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 16); // yyyy-MM-ddTHH:mm
-    setDateTime(nextHour);
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      if (!displayAddress) {
-        try {
-          const me = await api.users.me();
-          setDisplayAddress([me?.location, me?.pincode].filter(Boolean).join(", "));
-        } catch (e) {}
-      }
-    })();
-  }, [displayAddress]);
-
-  const createBooking = async () => {
-    try {
-      if (!selectedProvider) {
-        Alert.alert("Select provider", "Please go back and select a provider.");
-        return;
-      }
-      const isoDate = new Date(dateTime).toISOString();
-      const payload = {
-        provider_id: selectedProvider?.provider_id || selectedProvider?.id,
-        service_type: selectedProvider?.service_type || service || "service",
-        date_time: isoDate,
-      };
-      await api.bookings.create(payload);
-      // Show confirmation popup then navigate to Home
-      setShowModal(true);
-      setTimeout(() => {
-        setShowModal(false);
-        router.push({ pathname: "/customerTabs/home" });
-      }, 1200);
-    } catch (e) {
-      const msg = e?.message || "Failed to create booking";
-      if (msg.toLowerCase().includes("unauthorized") || msg.includes("401")) {
-        Alert.alert("Login required", "Please log in to place a booking.", [
-          { text: "OK", onPress: () => router.replace("/auth/customer/customerLogin") },
-        ]);
-      } else {
-        Alert.alert("Error", msg);
-      }
-    }
+  const serviceDetails = {
+    service: "Plumbing",
+    dateTime: "Mon, August 25, 2025 at 9:32 AM",
+    location: "Margao Goa",
   };
 
   return (
@@ -108,37 +59,31 @@ export default function BookStep4() {
           Booking Details
         </Text>
 
-        {/* Provider details */}
-        <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base font-semibold mb-2">Provider</Text>
-          <Text className="text-white">{selectedProvider?.user?.name || selectedProvider?.name || "Provider"}</Text>
-          <Text className="text-gray-200 text-sm">{selectedProvider?.service_type || service || "Service"}</Text>
-        </View>
-
-        {/* Service and Address display */}
-        <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base">Service</Text>
-          <Text className="text-gray-200 mt-1">{selectedProvider?.service_type || service || "Service"}</Text>
-          <Text className="text-white text-base mt-4">Location</Text>
-          <Text className="text-gray-200 mt-1">{displayAddress || "Not set"}</Text>
-        </View>
-
-        {/* Date & Time only */}
-        <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base font-semibold mb-2">Date & Time</Text>
-          <TextInput
-            value={dateTime}
-            onChangeText={setDateTime}
-            placeholder="YYYY-MM-DDTHH:mm"
-            placeholderTextColor="#ddd"
-            className="bg-white rounded-xl px-3 py-2 text-gray-800"
-          />
-          <Text className="text-gray-300 text-xs mt-1">Format: YYYY-MM-DDTHH:mm (24h)</Text>
+        <View className="flex-col space-y-4 gap-4 mb-6">
+          {[
+            { label: "Service:", value: serviceDetails.service },
+            { label: "Date & Time:", value: serviceDetails.dateTime },
+            { label: "Location:", value: serviceDetails.location },
+            {
+              label: "Provider:",
+              value: selectedProvider?.name || "Not selected",
+            },
+          ].map((item, idx) => (
+            <View key={idx} className="flex-row justify-between items-center">
+              <Text className="text-white text-base">{item.label}</Text>
+              <View className="flex-row items-center">
+                <Text className="text-white text-base mr-2">{item.value}</Text>
+                <TouchableOpacity>
+                  <Text className="text-white text-lg">✎</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
         </View>
 
         <TouchableOpacity
-          onPress={createBooking}
-          className="mt-2 bg-cyan-400 py-3 rounded-xl"
+          onPress={() => setShowModal(true)}
+          className="mt-10 bg-cyan-400 py-3 rounded-xl"
         >
           <Text className="text-center text-white font-semibold text-base">
             Confirm Booking
@@ -156,9 +101,26 @@ export default function BookStep4() {
             <Text className="text-xl font-semibold mb-2 text-black">
               Booking Confirmed
             </Text>
-            <Text className="text-center text-gray-600 mb-2">
-              Redirecting to home...
+            <Text className="text-center text-gray-600 mb-6">
+              Your request has been successfully placed
             </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                setShowModal(false);
+                router.push({
+                  pathname: "/customerTabs/home",
+                  params: {
+                    provider: JSON.stringify(selectedProvider),
+                  },
+                });
+              }}
+              className="bg-cyan-400 py-3 px-6 rounded-xl w-full"
+            >
+              <Text className="text-center text-white font-semibold">
+                Go to Home
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

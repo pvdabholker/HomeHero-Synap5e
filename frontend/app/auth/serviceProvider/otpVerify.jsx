@@ -9,14 +9,13 @@ import {
 } from "react-native";
 import React, { useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 
-export default function OtpVerify() {
+export default function ServiceProviderOtpVerify() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const inputs = useRef([]);
   const router = useRouter();
-  const { userType } = useLocalSearchParams();
 
   const handleChange = (text, index) => {
     let newOtp = [...otp];
@@ -39,32 +38,28 @@ export default function OtpVerify() {
 
     setLoading(true);
     try {
-      // 🔹 Placeholder backend call
-      // Example:
-      // const res = await fetch("http://your-backend.com/verify-otp", {
+      // 🔹 Service Provider OTP Verification
+      // Example backend call:
+      // const res = await fetch("http://your-backend.com/verify-service-provider-otp", {
       //   method: "POST",
       //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ otp: enteredOtp, phone: "+11234567890" }),
+      //   body: JSON.stringify({ 
+      //     otp: enteredOtp, 
+      //     phone: "+11234567890",
+      //     userType: "service_provider"
+      //   }),
       // });
       // const data = await res.json();
       // if (data.success) {
-      //   if (userType === "provider") {
-      //     router.push("/serviceProviderTabs/home");
-      //   } else {
-      //     router.push("/customerTabs/home");
-      //   }
+      //   router.push("/serviceProviderTabs/");
       // } else {
       //   Alert.alert("Invalid OTP", data.message);
       // }
 
-      // Temporary success simulation
+      // Temporary success simulation for service provider
       setTimeout(() => {
         setLoading(false);
-        if (userType === "provider") {
-          router.push("/serviceProviderTabs/home");
-        } else {
-          router.push("/customerTabs/home");
-        }
+        router.push("/serviceProviderTabs/");
       }, 1500);
     } catch (error) {
       console.error(error);
@@ -82,14 +77,14 @@ export default function OtpVerify() {
     >
       <View className="flex justify-center items-center">
         <Image
-          source={require("../../assets/images/otp.jpg")}
+          source={require("../../../assets/images/otp.jpg")}
           className="h-[200px] w-[200px] mt-24"
           resizeMode="contain"
         />
       </View>
 
       <View className="flex justify-center items-center mt-10">
-        <Text className="text-4xl font-bold text-white mb-9 underline">
+        <Text className="text-4xl text-white mb-9 underline">
           OTP Verification
         </Text>
         <Text className="text-gray-200 text-lg">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,43 +6,22 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  DeviceEventEmitter,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { api } from "../../lib/api";
 
 export default function EditProfile() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  // 🔹 Local state (fetched from backend later)
+  const [name, setName] = useState("John Doe");
+  const [phone, setPhone] = useState("+1 234 567 8900");
   const [profilePic, setProfilePic] = useState(
     require("../../assets/images/logo.png")
   );
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const me = await api.users.me();
-        setName(me?.name || "");
-        setPhone(me?.phone || "");
-        setEmail(me?.email || "");
-        if (me?.avatar_url) {
-          setProfilePic({ uri: me.avatar_url });
-        }
-      } catch (e) {
-        // ignore; may be unauthenticated at this point
-      }
-    })();
-  }, []);
-
+  // 🔹 Handle Image Upload
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.Images,
@@ -52,46 +31,28 @@ export default function EditProfile() {
     });
 
     if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setProfilePic({ uri });
-      try {
-        const res = await api.users.uploadAvatar({ uri, name: "avatar.jpg" });
-        const newUrl = res?.avatar_url || uri;
-        DeviceEventEmitter.emit("USER_AVATAR_UPDATED", { avatar_url: newUrl });
-        Alert.alert("Updated", "Profile photo updated successfully");
-      } catch (e) {
-        Alert.alert("Upload failed", e.message || "Could not upload photo");
-      }
+      setProfilePic({ uri: result.assets[0].uri });
     }
   };
 
+  // 🔹 Save handler (connect backend later)
   const handleSave = async () => {
     try {
-      setLoading(true);
-      await api.users.updateMe({ name, phone, email });
-      DeviceEventEmitter.emit("USER_PROFILE_UPDATED", { name, phone, email });
+      // Example API call
+      /*
+      const res = await fetch("http://your-backend.com/api/user/updateProfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone }),
+      });
+      const data = await res.json();
+      */
 
-      if (currentPassword || newPassword || confirmPassword) {
-        if (!currentPassword || !newPassword || !confirmPassword) {
-          Alert.alert("Password", "Please fill all password fields.");
-        } else if (newPassword !== confirmPassword) {
-          Alert.alert("Password", "New passwords do not match.");
-        } else {
-          Alert.alert(
-            "Password",
-            "Password change isn't available yet in the API. Your name, phone, and email have been updated."
-          );
-        }
-      } else {
-        Alert.alert("Profile Updated", "Your profile changes have been saved.");
-      }
-
-      router.back();
+      Alert.alert("Profile Updated", "Your profile changes have been saved.");
+      router.back(); // Go back to Profile page
     } catch (error) {
-      Alert.alert("Error", error.message || "Something went wrong.");
+      Alert.alert("Error", "Something went wrong.");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,15 +83,6 @@ export default function EditProfile() {
           className="bg-white rounded-xl p-3 mb-6 text-gray-800"
         />
 
-        <Text className="text-white mb-2">Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          className="bg-white rounded-xl p-3 mb-6 text-gray-800"
-        />
-
         <Text className="text-white mb-2">Phone Number</Text>
         <TextInput
           value={phone}
@@ -139,37 +91,13 @@ export default function EditProfile() {
           className="bg-white rounded-xl p-3 mb-6 text-gray-800"
         />
 
-        {/* Password Section */}
-        <Text className="text-white mb-2">Current Password</Text>
-        <TextInput
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          secureTextEntry
-          className="bg-white rounded-xl p-3 mb-4 text-gray-800"
-        />
-        <Text className="text-white mb-2">New Password</Text>
-        <TextInput
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-          className="bg-white rounded-xl p-3 mb-4 text-gray-800"
-        />
-        <Text className="text-white mb-2">Confirm New Password</Text>
-        <TextInput
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          className="bg-white rounded-xl p-3 mb-6 text-gray-800"
-        />
-
         {/* Save Button */}
         <TouchableOpacity
-          className={`py-4 rounded-xl mt-4 ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
+          className="bg-[#00EAFF] py-4 rounded-xl mt-4"
           onPress={handleSave}
-          disabled={loading}
         >
           <Text className="text-center text-white text-lg font-semibold">
-            {loading ? "Saving..." : "Save Changes"}
+            Save Changes
           </Text>
         </TouchableOpacity>
 

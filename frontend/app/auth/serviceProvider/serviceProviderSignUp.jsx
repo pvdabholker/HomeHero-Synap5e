@@ -12,7 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import Checkbox from "expo-checkbox";
 
-export default function CustomerSignUp() {
+export default function ServiceProviderSignUp() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -38,8 +38,8 @@ export default function CustomerSignUp() {
 
     setLoading(true);
     try {
-      // 🔹 Backend integration placeholder
-      // const res = await fetch("http://your-backend.com/customer-signup", {
+      // 🔹 Backend integration placeholder for service provider signup
+      // const res = await fetch("http://your-backend.com/service-provider-signup", {
       //   method: "POST",
       //   headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({ fullName, phone, email, password }),
@@ -47,7 +47,7 @@ export default function CustomerSignUp() {
       // const data = await res.json();
       //
       // if (data.success) {
-      //   router.push("/auth/otpVerify");
+      //   router.push("/auth/serviceProvider/profileDetails");
       // } else {
       //   Alert.alert("Sign Up Failed", data.message);
       // }
@@ -55,7 +55,7 @@ export default function CustomerSignUp() {
       // 🔹 Temporary simulation
       setTimeout(() => {
         setLoading(false);
-        router.push("/auth/otpVerify");
+        router.push("/auth/serviceProvider/profileDetails");
       }, 1500);
     } catch (error) {
       console.error(error);
@@ -79,6 +79,7 @@ export default function CustomerSignUp() {
           resizeMode="contain"
         />
       </View>
+
 
       {/* Inputs */}
       <View className="mt-14 flex flex-col gap-6">
@@ -154,7 +155,7 @@ export default function CustomerSignUp() {
       <View className="flex-row justify-center items-center mt-4">
         <Text className="text-white">Already have an account? </Text>
         <TouchableOpacity
-          onPress={() => router.push("/auth/customer/customerLogin")}
+          onPress={() => router.push("/auth/serviceProvider/serviceProviderLogin")}
         >
           <Text className="text-[#00EAFF] font-semibold">Log In</Text>
         </TouchableOpacity>

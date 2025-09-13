@@ -12,30 +12,47 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 // import AsyncStorage from "@react-native-async-storage/async-storage"; // uncomment when integrating
-import { api, TokenStore } from "../../../lib/api";
 
 export default function CustomerLogin() {
   const [isChecked, setIsChecked] = useState(false);
-  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async () => {
-    if (!emailOrPhone || !password) {
+    if (!phone || !password) {
       Alert.alert("Error", "Please fill in both fields");
       return;
     }
 
     setLoading(true);
     try {
-      await api.auth.login({ email_or_phone: emailOrPhone.trim(), password });
-      // TODO: If remember me is needed, persist tokens via AsyncStorage
-      setLoading(false);
-      router.push("/auth/otpVerify");
+      // 🔹 Placeholder API call
+      // const res = await fetch("http://your-backend.com/customer-login", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ phone, password }),
+      // });
+      // const data = await res.json();
+      //
+      // if (data.success) {
+      //   if (isChecked) {
+      //     await AsyncStorage.setItem("token", data.token);
+      //   }
+      //   router.push("/auth/otpVerify");
+      // } else {
+      //   Alert.alert("Login Failed", data.message);
+      // }
+
+      // 🔹 Temporary simulation
+      setTimeout(() => {
+        setLoading(false);
+        router.push("/auth/otpVerify");
+      }, 1500);
     } catch (error) {
       console.error(error);
-      Alert.alert("Login Failed", error.message || "Please try again later.");
+      Alert.alert("Error", "Something went wrong. Please try again later.");
       setLoading(false);
     }
   };
@@ -60,11 +77,10 @@ export default function CustomerLogin() {
       <View className="mt-14 flex flex-col gap-8">
         <TextInput
           className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-          placeholder="Phone or Email"
-          keyboardType="default"
-          autoCapitalize="none"
-          value={emailOrPhone}
-          onChangeText={setEmailOrPhone}
+          placeholder="Phone Number"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
         />
         <TextInput
           secureTextEntry={true}

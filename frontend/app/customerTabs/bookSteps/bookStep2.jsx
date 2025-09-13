@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { api } from "../../../lib/api";
+import { router } from "expo-router";
 
 const GOOGLE_API_KEY = "YOUR_API_KEY"; // replace with your key
 
 export default function SetLocation() {
-  const params = useLocalSearchParams();
-  const service = typeof params.service === "string" ? params.service : "";
-
   const [region, setRegion] = useState({
     latitude: 15.2993,
     longitude: 74.124,
@@ -25,22 +21,6 @@ export default function SetLocation() {
   });
 
   const [address, setAddress] = useState("");
-  const [savedAddress, setSavedAddress] = useState("");
-  const [authMissing, setAuthMissing] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const me = await api.users.me();
-        const existing = [me?.location, me?.pincode].filter(Boolean).join(", ");
-        setSavedAddress(existing);
-        setAuthMissing(false);
-      } catch (e) {
-        setSavedAddress("");
-        setAuthMissing(true);
-      }
-    })();
-  }, []);
 
   // 🔹 Function to reverse geocode (can later move to backend or Google API service)
   const fetchAddress = async (lat, lng) => {
@@ -57,38 +37,10 @@ export default function SetLocation() {
     }
   };
 
-  // 🔹 Save location to backend (simple pincode extractor)
-  const saveAddress = async () => {
-    try {
-      const pinMatch = address.match(/\b(\d{6})\b/);
-      const pincode = pinMatch ? pinMatch[1] : "403001"; // default Panaji if not found
-      await api.users.updateLocation({ location: address || "Goa", pincode });
-      Alert.alert("Saved", "Location saved successfully");
-      router.push({ pathname: "/customerTabs/bookSteps/bookStep3", params: { service, address: address || savedAddress } });
-    } catch (e) {
-      const msg = e?.message || "Could not save location";
-      if (msg.toLowerCase().includes("unauthorized") || msg.includes("401")) {
-        Alert.alert("Login required", "Please log in to save your address.", [
-          { text: "OK", onPress: () => router.replace("/auth/customer/customerLogin") },
-        ]);
-      } else {
-        Alert.alert("Failed", msg);
-      }
-    }
-  };
-
-  const useSavedAddress = () => {
-    if (!savedAddress) {
-      if (authMissing) {
-        Alert.alert("Login required", "Please log in to use a saved address.", [
-          { text: "OK", onPress: () => router.replace("/auth/customer/customerLogin") },
-        ]);
-        return;
-      }
-      Alert.alert("No saved address", "Please add a new address below.");
-      return;
-    }
-    router.push({ pathname: "/customerTabs/bookSteps/bookStep3", params: { service, address: savedAddress } });
+  // 🔹 Placeholder for saving address to backend
+  const saveAddress = () => {
+    console.log("Saving address:", address, marker);
+    // Later: API call to backend -> save address
   };
 
   return (
@@ -130,26 +82,9 @@ export default function SetLocation() {
       {/* Divider */}
       <View className="h-[1px] bg-white/40 mb-6" />
 
-      {/* Saved Address Card (if available) */}
-      <TouchableOpacity
-        className="bg-white rounded-xl px-4 py-3 flex-row items-center mb-4"
-        onPress={useSavedAddress}
-      >
-        <View className="bg-black w-8 h-8 rounded-full items-center justify-center mr-3">
-          <Ionicons name="home" size={18} color="white" />
-        </View>
-        <View className="flex-1">
-          <Text className="font-semibold text-gray-800">Saved Address</Text>
-          <Text className="text-sm text-gray-500">
-            {savedAddress || (authMissing ? "Please log in to see your saved address" : "No saved address")}
-          </Text>
-        </View>
-        <Text className="text-[#1d1664] font-semibold">Use</Text>
-      </TouchableOpacity>
-
       {/* Question */}
       <Text className="text-white text-base font-medium mb-4">
-        Add a new address (optional)
+        Where should the provider come?
       </Text>
 
       {/* Address Input */}
@@ -171,12 +106,6 @@ export default function SetLocation() {
           region={region}
           onRegionChangeComplete={setRegion}
           showsUserLocation={true}
-          showsMyLocationButton={true}
-          onPress={(e) => {
-            const { latitude, longitude } = e.nativeEvent.coordinate;
-            setMarker({ latitude, longitude });
-            fetchAddress(latitude, longitude);
-          }}
         >
           <Marker
             coordinate={marker}
@@ -184,11 +113,27 @@ export default function SetLocation() {
             onDragEnd={(e) => {
               const { latitude, longitude } = e.nativeEvent.coordinate;
               setMarker({ latitude, longitude });
-              fetchAddress(latitude, longitude);
+              fetchAddress(latitude, longitude); // 🔹 update address
             }}
           />
         </MapView>
       </View>
+
+      {/* Saved Address */}
+      <TouchableOpacity
+        className="bg-white rounded-xl px-4 py-3 flex-row items-center mb-4"
+        onPress={() => router.push("/customerTabs/bookSteps/bookStep3")}
+      >
+        <View className="bg-black w-8 h-8 rounded-full items-center justify-center mr-3">
+          <Ionicons name="home" size={18} color="white" />
+        </View>
+        <View>
+          <Text className="font-semibold text-gray-800">Home</Text>
+          <Text className="text-sm text-gray-500">
+            {address || "Margao, Goa"}
+          </Text>
+        </View>
+      </TouchableOpacity>
 
       {/* Add New Address */}
       <TouchableOpacity
