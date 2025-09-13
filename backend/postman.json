@@ -673,6 +673,73 @@
               "path": ["api", "bookings", "requests", "callback"]
             }
           }
+        },
+        {
+          "name": "Cancel Booking (Customer)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Emergency came up, need to cancel\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Reschedule Booking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_date_time\": \"2024-12-02T14:00:00\",\n  \"reason\": \"Original time not suitable\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}/reschedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}", "reschedule"]
+            }
+          }
+        },
+        {
+          "name": "Check Can Cancel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}/can-cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}", "can-cancel"]
+            }
+          }
         }
       ]
     },
