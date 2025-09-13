@@ -13,6 +13,8 @@ from app.schemas.booking import (
     BookingCreate,
     BookingStatusUpdate,
     CallbackRequest,
+    BookingCancellation,
+    BookingReshedule,
 )
 from app.controllers.booking import BookingController
 from app.controllers.provider import ProviderController
@@ -147,3 +149,145 @@ async def respond_to_booking(
 
     BookingController.update_booking_status(db, booking_id, status_data.status)
     return {"message": "Booking updated"}
+
+
+# cancel booking customer only
+@router.delete("/{booking_id}", response_model=dict)
+async def cancel_booking(
+    request,
+    booking_id: str,
+    cancellation: BookingCancellation,
+    current_user: User = Depends(get_current_customer),
+    db: Session = Depends(get_db),
+):
+    try:
+        booking = BookingController.cancel_booking(
+            db=db,
+            booking_id=booking_id,
+            user_id=str(current_user.id),
+            reason=cancellation.reason,
+            canceled_by="customer",
+        )
+
+        return {
+            "message": "Booking cancelled successfully",
+            "booking_id": str(booking.booking_id),
+            "status": booking.status,
+            "cancelled_at": booking.canceled_at,
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cancel booking: {str(e)}",
+        )
+
+
+# reshedule a booking to new date/time
+@router.put("/{booking_id}/reschedule", response_model=dict)
+async def reshedule_booking(
+    request,
+    booking_id: str,
+    reschedule_data: BookingReshedule,
+    current_user: User = Depends(get_current_customer),
+    db: Session = Depends(get_db),
+):
+    try:
+        booking = BookingController.reschedule_booking(
+            db=db,
+            booking_id=booking_id,
+            customer_id=str(current_user.id),
+            new_date_time=reschedule_data.new_date_time,
+            reason=reschedule_data.reason,
+        )
+
+        return {
+            "message": "Booking rescheduled successfully",
+            "booking_id": str(booking.booking_id),
+            "new_date_time": booking.date_time,
+            "status": booking.status,
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reschedule booking: {str(e)}",
+        )
+
+
+# chech if  booking can be cancelled
+@router.get("/{booking_id}/can-cancel", response_model=dict)
+async def check_cancellation_allowed(
+    booking_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    booking = BookingController.get_booking(db, booking_id)
+
+    # Verify access
+    if (
+        str(current_user.id) != str(booking.customer_id)
+        and current_user.user_type != "admin"
+    ):
+        if current_user.user_type == "provider":
+            provider = ProviderController.get_provider_by_user(db, str(current_user.id))
+            if str(provider.provider_id) != str(booking.provider_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            )
+
+    can_cancel = BookingController.can_cancel_booking(booking)
+    can_reschedule = BookingController.can_reshedule_booking(booking)
+
+    return {
+        "booking_id": booking_id,
+        "can_cancel": can_cancel,
+        "can_reschedule": can_reschedule,
+        "current_status": booking.status,
+        "booking_date": booking.date_time,
+        "reason": (
+            "Can only cancel pending or accepted bookings" if not can_cancel else None
+        ),
+    }
+
+
+# cancel booking provider only
+@router.delete("/{booking_id}/provider-cancel", response_model=dict)
+async def provider_cancel_booking(
+    request,
+    booking_id: str,
+    cancellation: BookingCancellation,
+    current_user: User = Depends(get_current_provider),
+    db: Session = Depends(get_db),
+):
+    try:
+        booking = BookingController.cancel_booking(
+            db=db,
+            booking_id=booking_id,
+            user_id=str(current_user.id),
+            reason=cancellation.reason,
+            canceled_by="provider",
+        )
+
+        return {
+            "message": "Booking cancelled by provider",
+            "booking_id": str(booking.booking_id),
+            "status": booking.status,
+            "cancelled_at": booking.canceled_at,
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cancel booking: {str(e)}",
+        )

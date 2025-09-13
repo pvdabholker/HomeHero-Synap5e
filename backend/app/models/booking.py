@@ -22,6 +22,8 @@ class BookingStatus(str, Enum):
     COMPLETED = "completed"
     CANCELED = "canceled"
     DECLINED = "declined"
+    CANCELED_BY_CUSTOMER = "canceled_by_customer"  # new
+    CANCELED_BY_PROVIDER = "canceled_by_provider"  # new
 
 
 class Booking(Base):
@@ -38,6 +40,11 @@ class Booking(Base):
     special_instructions = Column(Text)
     estimated_price = Column(Float)
     final_price = Column(Float)
+
+    cancellation_reason = Column(Text)
+    canceled_by = Column(String)
+    caceled_at = Column(DateTime(timezone=True))
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -3,7 +3,7 @@ import logging
 import sys
 from typing import Any, Dict
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.config import settings
 
@@ -61,7 +61,7 @@ class LoggerMiddleware:
                 path=scope["path"],
                 query_string=scope["query_string"].decode(),
                 client=scope["client"][0] if scope["client"] else None,
-                timestamp=datetime.utcnow().isoformat(),
+                timestamp=datetime.now(timezone.utc),
             )
 
             # log request
