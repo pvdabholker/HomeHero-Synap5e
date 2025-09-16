@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,13 @@ import {
   Image,
   Alert,
   DeviceEventEmitter,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { api } from "../../lib/api";
+import { api } from "../../../lib/api";
 
 export default function EditProfile() {
   const router = useRouter();
@@ -22,10 +24,24 @@ export default function EditProfile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [profilePic, setProfilePic] = useState(
-    require("../../assets/images/logo.png")
-  );
+  const [profilePic, setProfilePic] = useState();
   const [loading, setLoading] = useState(false);
+
+  // Handle hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.push("/customerTabs/Profile");
+        return true; // Prevent default behavior
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => subscription.remove();
+    }, [])
+  );
 
   useEffect(() => {
     (async () => {
@@ -86,7 +102,7 @@ export default function EditProfile() {
         Alert.alert("Profile Updated", "Your profile changes have been saved.");
       }
 
-      router.back();
+      router.push("/customerTabs/Profile");
     } catch (error) {
       Alert.alert("Error", error.message || "Something went wrong.");
       console.error(error);
@@ -107,7 +123,9 @@ export default function EditProfile() {
         <View className="items-center mb-8">
           <TouchableOpacity onPress={pickImage}>
             <Image
-              source={profilePic}
+              source={
+                profilePic || require("../../../assets/images/avatar.png")
+              }
               className="w-28 h-28 rounded-full border-4 border-white"
             />
             <Text className="text-white mt-2 underline">Change Photo</Text>
@@ -174,7 +192,10 @@ export default function EditProfile() {
         </TouchableOpacity>
 
         {/* Cancel */}
-        <TouchableOpacity className="mt-4" onPress={() => router.back()}>
+        <TouchableOpacity
+          className="mt-4"
+          onPress={() => router.push("/customerTabs/Profile")}
+        >
           <Text className="text-center text-gray-200">Cancel</Text>
         </TouchableOpacity>
       </View>

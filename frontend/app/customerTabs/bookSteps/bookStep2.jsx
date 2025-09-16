@@ -53,7 +53,6 @@ export default function SetLocation() {
         setAddress(data.results[0].formatted_address);
       }
     } catch (error) {
-      console.log("Error fetching address:", error);
     }
   };
 

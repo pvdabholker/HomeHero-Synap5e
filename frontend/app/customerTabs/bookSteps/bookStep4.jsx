@@ -7,6 +7,8 @@ import {
   TextInput,
   Alert,
   DeviceEventEmitter,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
@@ -114,183 +116,197 @@ export default function BookStep4() {
   };
 
   return (
-    <LinearGradient
-      colors={["#1d1664", "#c3c0d6"]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      className="flex-1"
-    >
-      <ScrollView className="flex-1 px-6 pt-12">
-        {/* Header */}
-        <View className="flex-row items-center mb-6">
-          <Ionicons name="arrow-back" size={24} color="white" />
-          <Text className="ml-3 text-lg font-semibold text-white">Summary</Text>
-        </View>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "#1d1664" }}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#1d1664"
+        translucent={false}
+      />
+      <LinearGradient
+        colors={["#1d1664", "#c3c0d6"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1 px-6 pt-4 mt-2"
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
+          {/* Header */}
+          <View className="flex-row items-center mb-6">
+            <Ionicons name="arrow-back" size={24} color="white" />
+            <Text className="ml-3 text-lg font-semibold text-white">
+              Summary
+            </Text>
+          </View>
 
-        {/* Steps */}
-        <View className="flex-row justify-between items-center mb-6">
-          {["Step 1", "Step 2", "Step 3", "Step 4"].map((step, index) => (
-            <View key={index} className="items-center flex-1">
-              <View
-                className={`w-3 h-3 rounded-full ${
-                  index <= 3 ? "bg-cyan-400" : "bg-white/50"
-                }`}
-              />
-              <Text className="text-xs text-white mt-2">{step}</Text>
-              <Text className="text-[10px] text-white/70">
-                {
-                  ["Select Services", "Location", "Pick Provider", "Summary"][
-                    index
-                  ]
-                }
-              </Text>
-            </View>
-          ))}
-        </View>
+          {/* Steps */}
+          <View className="flex-row justify-between items-center mb-6">
+            {["Step 1", "Step 2", "Step 3", "Step 4"].map((step, index) => (
+              <View key={index} className="items-center flex-1">
+                <View
+                  className={`w-3 h-3 rounded-full ${
+                    index <= 3 ? "bg-cyan-400" : "bg-white/50"
+                  }`}
+                />
+                <Text className="text-xs text-white mt-2">{step}</Text>
+                <Text className="text-[10px] text-white/70">
+                  {
+                    ["Select Services", "Location", "Pick Provider", "Summary"][
+                      index
+                    ]
+                  }
+                </Text>
+              </View>
+            ))}
+          </View>
 
-        {/* Divider */}
-        <View className="h-[1px] bg-white/40 mb-6" />
+          {/* Divider */}
+          <View className="h-[1px] bg-white/40 mb-6" />
 
-        <Text className="text-center text-white text-lg font-semibold mb-6">
-          Booking Details
-        </Text>
-
-        {/* Provider details */}
-        <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base font-semibold mb-2">
-            Provider
-          </Text>
-          <Text className="text-white">
-            {selectedProvider?.user?.name ||
-              selectedProvider?.name ||
-              "Provider"}
-          </Text>
-          <Text className="text-gray-200 text-sm">
-            {selectedProvider?.service_type || service || "Service"}
+          <Text className="text-center text-white text-lg font-semibold mb-6">
+            Booking Details
           </Text>
 
-          {/* Display pricing */}
-          <View className="mt-3 pt-3 border-t border-white/20">
-            <Text className="text-white text-sm font-medium mb-1">Pricing</Text>
-            <Text className="text-green-300 text-base font-semibold">
-              {selectedProvider?.hourly_rate
-                ? `₹${selectedProvider.hourly_rate}/hr`
-                : selectedProvider?.pricing?.hourly_rate
-                  ? `₹${selectedProvider.pricing.hourly_rate}/hr`
-                  : selectedProvider?.base_price
-                    ? `₹${selectedProvider.base_price}`
-                    : "Price on request"}
+          {/* Provider details */}
+          <View className="bg-white/20 rounded-2xl p-4 mb-6">
+            <Text className="text-white text-base font-semibold mb-2">
+              Provider
+            </Text>
+            <Text className="text-white">
+              {selectedProvider?.user?.name ||
+                selectedProvider?.name ||
+                "Provider"}
+            </Text>
+            <Text className="text-gray-200 text-sm">
+              {selectedProvider?.service_type || service || "Service"}
             </Text>
 
-            {/* Show minimum charge if available */}
-            {(selectedProvider?.minimum_charge ||
-              selectedProvider?.base_price) && (
-              <Text className="text-gray-300 text-xs mt-1">
-                Minimum charge: ₹
-                {selectedProvider?.minimum_charge ||
-                  selectedProvider?.base_price}
+            {/* Display pricing */}
+            <View className="mt-3 pt-3 border-t border-white/20">
+              <Text className="text-white text-sm font-medium mb-1">
+                Pricing
               </Text>
-            )}
-          </View>
-        </View>
+              <Text className="text-green-300 text-base font-semibold">
+                {selectedProvider?.hourly_rate
+                  ? `₹${selectedProvider.hourly_rate}/hr`
+                  : selectedProvider?.pricing?.hourly_rate
+                    ? `₹${selectedProvider.pricing.hourly_rate}/hr`
+                    : selectedProvider?.base_price
+                      ? `₹${selectedProvider.base_price}`
+                      : "Price on request"}
+              </Text>
 
-        {/* Service and Address display */}
-        <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base">Service</Text>
-          <Text className="text-gray-200 mt-1">
-            {selectedProvider?.service_type || service || "Service"}
-          </Text>
-          <Text className="text-white text-base mt-4">Location</Text>
-          <Text className="text-gray-200 mt-1">
-            {displayAddress || "Not set"}
-          </Text>
-        </View>
-
-        {/* Date & Time Selection */}
-        <View className="bg-white/20 rounded-2xl p-4 mb-6">
-          <Text className="text-white text-base font-semibold mb-2">
-            Date & Time
-          </Text>
-          <View className="flex-row space-x-2 gap-2">
-            <View className="flex-1">
-              <Text className="text-white text-sm mb-1">Date</Text>
-              <TextInput
-                value={dateTime.split("T")[0]}
-                onChangeText={(date) => {
-                  const time24 = convertTo24Hour(selectedTime, isAM);
-                  setDateTime(date + "T" + time24);
-                }}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#ddd"
-                className="bg-white rounded-xl px-3 py-2 text-gray-800"
-              />
+              {/* Show minimum charge if available */}
+              {(selectedProvider?.minimum_charge ||
+                selectedProvider?.base_price) && (
+                <Text className="text-gray-300 text-xs mt-1">
+                  Minimum charge: ₹
+                  {selectedProvider?.minimum_charge ||
+                    selectedProvider?.base_price}
+                </Text>
+              )}
             </View>
-            <View className="flex-1">
-              <Text className="text-white text-sm mb-1">Time</Text>
-              <View className="flex-row gap-1">
+          </View>
+
+          {/* Service and Address display */}
+          <View className="bg-white/20 rounded-2xl p-4 mb-6">
+            <Text className="text-white text-base">Service</Text>
+            <Text className="text-gray-200 mt-1">
+              {selectedProvider?.service_type || service || "Service"}
+            </Text>
+            <Text className="text-white text-base mt-4">Location</Text>
+            <Text className="text-gray-200 mt-1">
+              {displayAddress || "Not set"}
+            </Text>
+          </View>
+
+          {/* Date & Time Selection */}
+          <View className="bg-white/20 rounded-2xl p-4 mb-6">
+            <Text className="text-white text-base font-semibold mb-2">
+              Date & Time
+            </Text>
+            <View className="flex-row space-x-2 gap-2">
+              <View className="flex-1">
+                <Text className="text-white text-sm mb-1">Date</Text>
                 <TextInput
-                  value={selectedTime}
-                  onChangeText={(time) => {
-                    setSelectedTime(time);
-                    const time24 = convertTo24Hour(time, isAM);
-                    const date =
-                      dateTime.split("T")[0] ||
-                      new Date().toISOString().split("T")[0];
+                  value={dateTime.split("T")[0]}
+                  onChangeText={(date) => {
+                    const time24 = convertTo24Hour(selectedTime, isAM);
                     setDateTime(date + "T" + time24);
                   }}
-                  placeholder="12:00"
+                  placeholder="YYYY-MM-DD"
                   placeholderTextColor="#ddd"
-                  className="bg-white rounded-xl px-3 py-2 text-gray-800 flex-1"
+                  className="bg-white rounded-xl px-3 py-2 text-gray-800"
                 />
-                <TouchableOpacity
-                  onPress={() => {
-                    setIsAM(!isAM);
-                    const time24 = convertTo24Hour(selectedTime, !isAM);
-                    const date =
-                      dateTime.split("T")[0] ||
-                      new Date().toISOString().split("T")[0];
-                    setDateTime(date + "T" + time24);
-                  }}
-                  className="bg-white rounded-xl px-3 py-2 justify-center"
-                >
-                  <Text className="text-gray-800 font-medium">
-                    {isAM ? "AM" : "PM"}
-                  </Text>
-                </TouchableOpacity>
+              </View>
+              <View className="flex-1">
+                <Text className="text-white text-sm mb-1">Time</Text>
+                <View className="flex-row gap-1">
+                  <TextInput
+                    value={selectedTime}
+                    onChangeText={(time) => {
+                      setSelectedTime(time);
+                      const time24 = convertTo24Hour(time, isAM);
+                      const date =
+                        dateTime.split("T")[0] ||
+                        new Date().toISOString().split("T")[0];
+                      setDateTime(date + "T" + time24);
+                    }}
+                    placeholder="12:00"
+                    placeholderTextColor="#ddd"
+                    className="bg-white rounded-xl px-3 py-2 text-gray-800 flex-1"
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsAM(!isAM);
+                      const time24 = convertTo24Hour(selectedTime, !isAM);
+                      const date =
+                        dateTime.split("T")[0] ||
+                        new Date().toISOString().split("T")[0];
+                      setDateTime(date + "T" + time24);
+                    }}
+                    className="bg-white rounded-xl px-3 py-2 justify-center"
+                  >
+                    <Text className="text-gray-800 font-medium">
+                      {isAM ? "AM" : "PM"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
+            <Text className="text-gray-300 text-xs mt-2">
+              Time format: 12-hour (e.g., 2:30 PM)
+            </Text>
           </View>
-          <Text className="text-gray-300 text-xs mt-2">
-            Time format: 12-hour (e.g., 2:30 PM)
-          </Text>
-        </View>
 
-        <TouchableOpacity
-          onPress={createBooking}
-          className="mt-2 bg-cyan-400 py-3 rounded-xl"
-        >
-          <Text className="text-center text-white font-semibold text-base">
-            Confirm Booking
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            onPress={createBooking}
+            className="mt-2 bg-cyan-400 py-3 rounded-xl"
+          >
+            <Text className="text-center text-white font-semibold text-base">
+              Confirm Booking
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
 
-      <Modal visible={showModal} transparent animationType="fade">
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-2xl p-6 w-80 items-center shadow-lg">
-            <View className="w-16 h-16 rounded-full bg-cyan-400 justify-center items-center mb-4">
-              <Text className="text-white text-3xl">✓</Text>
+        <Modal visible={showModal} transparent animationType="fade">
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-white rounded-2xl p-6 w-80 items-center shadow-lg">
+              <View className="w-16 h-16 rounded-full bg-cyan-400 justify-center items-center mb-4">
+                <Text className="text-white text-3xl">✓</Text>
+              </View>
+
+              <Text className="text-xl font-semibold mb-2 text-black">
+                Booking Confirmed
+              </Text>
+              <Text className="text-center text-gray-600 mb-2">
+                Redirecting to home...
+              </Text>
             </View>
-
-            <Text className="text-xl font-semibold mb-2 text-black">
-              Booking Confirmed
-            </Text>
-            <Text className="text-center text-gray-600 mb-2">
-              Redirecting to home...
-            </Text>
           </View>
-        </View>
-      </Modal>
-    </LinearGradient>
+        </Modal>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }

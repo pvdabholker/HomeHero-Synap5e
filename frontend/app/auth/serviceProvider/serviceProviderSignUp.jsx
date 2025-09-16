@@ -6,15 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  DeviceEventEmitter,
 } from "react-native";
 import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import Checkbox from "expo-checkbox";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../../lib/api";
 
-export default function CustomerSignUp() {
+export default function ServiceProviderSignUp() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -24,65 +24,97 @@ export default function CustomerSignUp() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async () => {
-    if (!fullName || !phone || !email || !password || !confirm) {
-      Alert.alert("Error", "All fields are required");
-      return;
+  const validateInput = () => {
+    if (!fullName.trim()) {
+      Alert.alert("Error", "Please enter your full name");
+      return false;
+    }
+    if (!phone.trim()) {
+      Alert.alert("Error", "Please enter your phone number");
+      return false;
+    }
+    if (!email.trim()) {
+      Alert.alert("Error", "Please enter your email address");
+      return false;
+    }
+    if (!password.trim()) {
+      Alert.alert("Error", "Please enter a password");
+      return false;
     }
     if (password !== confirm) {
       Alert.alert("Error", "Passwords do not match");
-      return;
+      return false;
+    }
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long");
+      return false;
     }
     if (!acceptTerms) {
       Alert.alert("Error", "You must accept the Terms & Conditions");
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateInput()) return;
 
     setLoading(true);
     try {
-      // First, let's test API connectivity
-      const testResponse = await fetch(
-        "https://homehero-synap5e.onrender.com/",
-        {
-          method: "GET",
-        }
-      );
+      // Register the user as a service provider using the structured api object
       const response = await api.auth.register({
-        name: fullName,
-        phone,
-        email,
-        password,
-        user_type: "customer",
+        name: fullName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        password: password.trim(),
+        user_type: "provider",
       });
 
-      setLoading(false);
-
-      // Emit event to notify home page that a new user signed up
-      DeviceEventEmitter.emit("USER_LOGGED_IN");
-
-      Alert.alert("Success", "Account created successfully!", [
-        {
-          text: "OK",
-          onPress: () => router.push("/customerTabs/home"),
-        },
-      ]);
+      if (response && response.user_id) {
+        Alert.alert(
+          "Registration Successful!",
+          "Your service provider account has been created. Please proceed to complete your profile.",
+          [
+            {
+              text: "Continue",
+              onPress: () => {
+                // Store temporary registration data for the profile setup
+                AsyncStorage.setItem("tempUserId", response.user_id);
+                router.push("/auth/serviceProvider/profileDetails");
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Registration Failed",
+          "Unable to create account. Please try again."
+        );
+      }
     } catch (error) {
-      setLoading(false);
+      console.error("Signup error:", error);
 
-      // Better error message extraction
-      let errorMessage = "Please try again later.";
+      let errorMessage = "Something went wrong. Please try again.";
 
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      } else if (error?.detail) {
-        errorMessage = error.detail;
-      } else if (error?.error) {
-        errorMessage = error.error;
+      if (error.response) {
+        if (error.response.status === 400) {
+          if (error.response.data?.detail) {
+            errorMessage = error.response.data.detail;
+          } else {
+            errorMessage = "Invalid input. Please check your information.";
+          }
+        } else if (error.response.status === 409) {
+          errorMessage =
+            "Email or phone number already exists. Please try logging in instead.";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
       }
 
-      Alert.alert("Sign Up Failed", errorMessage);
+      Alert.alert("Registration Failed", errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,13 +129,13 @@ export default function CustomerSignUp() {
       <View className="flex justify-center items-center">
         <Image
           source={require("../../../assets/images/signup.jpg")}
-          className="h-[180px] w-[180px] mt-24"
+          className="h-[200px] w-[200px] mt-24"
           resizeMode="contain"
         />
       </View>
 
       {/* Inputs */}
-      <View className="mt-12 flex flex-col gap-5">
+      <View className="mt-14 flex flex-col gap-6">
         <TextInput
           className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
           placeholder="Full Name"
@@ -166,7 +198,7 @@ export default function CustomerSignUp() {
             <ActivityIndicator color="white" />
           ) : (
             <Text className="text-white text-center font-medium text-lg">
-              Create account
+              Sign Up
             </Text>
           )}
         </TouchableOpacity>
@@ -176,7 +208,9 @@ export default function CustomerSignUp() {
       <View className="flex-row justify-center items-center mt-4">
         <Text className="text-white">Already have an account? </Text>
         <TouchableOpacity
-          onPress={() => router.push("/auth/customer/customerLogin")}
+          onPress={() =>
+            router.push("/auth/serviceProvider/serviceProviderLogin")
+          }
         >
           <Text className="text-[#00EAFF] font-semibold">Log In</Text>
         </TouchableOpacity>

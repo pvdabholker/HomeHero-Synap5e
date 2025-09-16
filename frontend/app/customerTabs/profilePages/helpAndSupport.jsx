@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,31 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function HelpAndSupport() {
   const [expandedFaq, setExpandedFaq] = useState(null);
+
+  // Handle hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.push("/customerTabs/Profile");
+        return true; // Prevent default behavior
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => subscription.remove();
+    }, [])
+  );
 
   const faqs = [
     {
@@ -69,7 +87,7 @@ export default function HelpAndSupport() {
     >
       {/* Header */}
       <View className="px-5 pt-12 flex-row items-center mb-6">
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/customerTabs/Profile")}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-white text-xl font-semibold ml-3">

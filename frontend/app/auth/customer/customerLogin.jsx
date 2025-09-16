@@ -15,6 +15,7 @@ import {
   BackHandler,
   Platform,
   ToastAndroid,
+  DeviceEventEmitter,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -81,14 +82,16 @@ export default function CustomerLogin() {
         // Store token in TokenStore as well
         TokenStore.token = response.access_token;
       } else {
-        console.error("Response structure:", response);
         throw new Error("Login failed - Invalid response format");
       }
 
       setLoading(false);
+
+      // Emit event to notify home page that a new user logged in
+      DeviceEventEmitter.emit("USER_LOGGED_IN");
+
       router.replace("/customerTabs/home");
     } catch (error) {
-      console.error(error);
       showErrorAlert(error.message || "Please try again later.");
       setLoading(false);
     }
@@ -97,10 +100,10 @@ export default function CustomerLogin() {
   return (
     <SafeAreaView className="flex-1">
       <StatusBar
-              barStyle="light-content"
-              backgroundColor="transparent"
-              translucent={true}
-            />
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
       <LinearGradient
         colors={["#1d1664", "#c3c0d6"]}
         start={{ x: 0.5, y: 0 }}

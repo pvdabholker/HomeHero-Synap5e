@@ -109,10 +109,20 @@ export default function HomeScreen() {
       }, 500);
     });
 
+    // Listen for new user login/signup
+    const sub4 = DeviceEventEmitter.addListener("USER_LOGGED_IN", () => {
+      // Force refresh user data when new user logs in
+      setTimeout(() => {
+        loadMe();
+        fetchUpcomingBookings();
+      }, 100);
+    });
+
     return () => {
       sub1.remove();
       sub2.remove();
       sub3.remove();
+      sub4.remove();
     };
   }, [loadMe, fetchUpcomingBookings]);
 
@@ -144,6 +154,11 @@ export default function HomeScreen() {
 
   const loadMe = useCallback(async () => {
     try {
+      // Clear any cached data first
+      setUserName("");
+      setUserLocation("Goa");
+      setAvatarUrl("");
+
       const me = await api.users.me();
       if (me) {
         setUserName(me.name || "");
@@ -151,6 +166,7 @@ export default function HomeScreen() {
         setAvatarUrl(me.avatar_url || "");
       }
     } catch (e) {
+      // If API call fails, ensure we have clean state
       setUserName("");
       setUserLocation("Goa");
       setAvatarUrl("");
@@ -567,11 +583,11 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "#1d1664" }}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor="transparent"
-        translucent={true}
+        backgroundColor="#1d1664"
+        translucent={false}
       />
       <LinearGradient
         colors={["#1d1664", "#c3c0d6"]}
@@ -579,8 +595,8 @@ export default function HomeScreen() {
         end={{ x: 0.5, y: 1 }}
         className="flex-1"
       >
-        {/* Header - Transparent with proper margin */}
-        <View className="px-5 pt-12 pb-4">
+        {/* Header - Proper spacing from status bar */}
+        <View className="px-5 pt-6 pb-4 mt-4">
           <View className="flex-row items-center space-x-3">
             <Image
               source={avatarUrl ? { uri: avatarUrl } : undefined}
@@ -604,7 +620,7 @@ export default function HomeScreen() {
         <ScrollView
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
           {/* Search Bar */}
           <View className="mb-6">
@@ -694,24 +710,6 @@ export default function HomeScreen() {
             </View>
           ) : null}
         </ScrollView>
-
-        {/* Bottom Navigation */}
-        <View className="flex-row justify-around py-3 bg-white border-t border-gray-200">
-          <TouchableOpacity
-            className="items-center"
-            onPress={() => router.push("/customerTabs/bookSteps/bookStep1")}
-          >
-            <Ionicons name="book" size={24} color="black" />
-            <Text className="text-xs">Book</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="items-center"
-            onPress={() => router.push("/customerTabs/Profile")}
-          >
-            <Ionicons name="person" size={24} color="black" />
-            <Text className="text-xs">Profile</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Booking Details Modal */}
         <Modal

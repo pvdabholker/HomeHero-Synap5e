@@ -91,7 +91,6 @@ export default function BookStep3() {
           setProviders([]);
         }
       } catch (e) {
-        console.error("Error fetching providers:", e);
         setProviders([]);
       } finally {
         setLoading(false);
@@ -113,7 +112,7 @@ export default function BookStep3() {
       end={{ x: 0.5, y: 1 }}
       className="flex-1"
     >
-      <ScrollView contentContainerStyle={{ padding: 20, marginTop: 20 }}>
+      <View className="flex-1" style={{ padding: 20, marginTop: 20 }}>
         {/* Header */}
         <View className="flex-row items-center mb-6">
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -151,75 +150,87 @@ export default function BookStep3() {
           Pick Provider {service ? `- ${service}` : ""}
         </Text>
 
+        {/* Providers List - Only this section scrolls */}
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator color="#fff" />
+          </View>
         ) : providers.length === 0 ? (
-          <Text className="text-white text-center mt-6">
-            No providers found.
-          </Text>
+          <View className="flex-1 justify-center items-center">
+            <Text className="text-white text-center">No providers found.</Text>
+          </View>
         ) : (
-          providers.map((p) => (
-            <View
-              key={p?.provider_id || p?.id}
-              className="bg-white/20 rounded-2xl p-4 mb-5"
-            >
-              <View className="flex-row justify-between items-center">
-                <View className="flex-row items-center">
-                  <Image
-                    source={{
-                      uri:
-                        p?.user?.avatar_url || "https://via.placeholder.com/50",
-                    }}
-                    className="w-12 h-12 rounded-full mr-3"
-                  />
-                  <View>
-                    <Text className="text-white text-base font-semibold">
-                      {p?.user?.name || p?.name || "Provider"}
-                    </Text>
-                    <Text className="text-gray-200 text-sm">
-                      {p?.service_type || service || "Service"}
-                    </Text>
-                    {/* Display charges from backend */}
-                    <Text className="text-green-300 text-sm font-medium">
-                      {p?.hourly_rate
-                        ? `₹${p.hourly_rate}/hr`
-                        : p?.pricing?.hourly_rate
-                          ? `₹${p.pricing.hourly_rate}/hr`
-                          : p?.base_price
-                            ? `₹${p.base_price}`
-                            : "Price on request"}
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
+            {providers.map((p) => (
+              <View
+                key={p?.provider_id || p?.id}
+                className="bg-white/20 rounded-2xl p-4 mb-5"
+              >
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-row items-center">
+                    <Image
+                      source={{
+                        uri:
+                          p?.user?.avatar_url ||
+                          "https://via.placeholder.com/50",
+                      }}
+                      className="w-12 h-12 rounded-full mr-3"
+                    />
+                    <View>
+                      <Text className="text-white text-base font-semibold">
+                        {p?.user?.name || p?.name || "Provider"}
+                      </Text>
+                      <Text className="text-gray-200 text-sm">
+                        {p?.service_type || service || "Service"}
+                      </Text>
+                      {/* Display charges from backend */}
+                      <Text className="text-green-300 text-sm font-medium">
+                        {p?.hourly_rate
+                          ? `₹${p.hourly_rate}/hr`
+                          : p?.pricing?.hourly_rate
+                            ? `₹${p.pricing.hourly_rate}/hr`
+                            : p?.base_price
+                              ? `₹${p.base_price}`
+                              : "Price on request"}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="flex-row items-center">
+                    <MaterialIcons name="star" size={20} color="gold" />
+                    <Text className="text-white ml-1">
+                      {p?.rating ?? "4.0"}
                     </Text>
                   </View>
                 </View>
-                <View className="flex-row items-center">
-                  <MaterialIcons name="star" size={20} color="gold" />
-                  <Text className="text-white ml-1">{p?.rating ?? "4.0"}</Text>
-                </View>
-              </View>
 
-              {/* Additional pricing info if available */}
-              {(p?.minimum_charge || p?.base_price) && (
-                <View className="mt-3 bg-white/10 rounded-lg p-2">
-                  <Text className="text-white text-xs">
-                    Minimum charge: ₹
-                    {p?.minimum_charge || p?.base_price || "200"}
+                {/* Additional pricing info if available */}
+                {(p?.minimum_charge || p?.base_price) && (
+                  <View className="mt-3 bg-white/10 rounded-lg p-2">
+                    <Text className="text-white text-xs">
+                      Minimum charge: ₹
+                      {p?.minimum_charge || p?.base_price || "200"}
+                    </Text>
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  className="mt-4 bg-white rounded-xl py-2 flex-row items-center justify-center"
+                  onPress={() => handleSelectProvider(p)}
+                >
+                  <Ionicons name="calendar-outline" size={18} color="black" />
+                  <Text className="ml-2 font-semibold text-black">
+                    Check Availability
                   </Text>
-                </View>
-              )}
-
-              <TouchableOpacity
-                className="mt-4 bg-white rounded-xl py-2 flex-row items-center justify-center"
-                onPress={() => handleSelectProvider(p)}
-              >
-                <Ionicons name="calendar-outline" size={18} color="black" />
-                <Text className="ml-2 font-semibold text-black">
-                  Check Availability
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ))
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
         )}
-      </ScrollView>
+      </View>
     </LinearGradient>
   );
 }

@@ -9,16 +9,34 @@ import {
   StatusBar,
   Alert,
   DeviceEventEmitter,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { api } from "../../lib/api";
+import { useFocusEffect } from "@react-navigation/native";
+import { api } from "../../../lib/api";
 
 export default function BookingHistory() {
   const router = useRouter();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Handle hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.push("/customerTabs/Profile");
+        return true; // Prevent default behavior
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => subscription.remove();
+    }, [])
+  );
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -38,8 +56,6 @@ export default function BookingHistory() {
             hoursAfterBooking > 2 &&
             (booking.status === "pending" || booking.status === "confirmed")
           ) {
-            
-
             // Return updated booking object for history display
             return {
               ...booking,
@@ -71,7 +87,6 @@ export default function BookingHistory() {
     const sub1 = DeviceEventEmitter.addListener(
       "BOOKING_CANCELLED",
       (eventData) => {
-        
         setTimeout(() => {
           loadBookings();
         }, 500);
@@ -146,7 +161,10 @@ export default function BookingHistory() {
       >
         {/* Header - Standard with proper margin for transparent status bar */}
         <View className="px-5 pt-12 pb-4 flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity
+            onPress={() => router.push("/customerTabs/Profile")}
+            className="mr-4"
+          >
             <MaterialIcons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-xl font-semibold">

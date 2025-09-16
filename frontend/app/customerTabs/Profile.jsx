@@ -71,22 +71,17 @@ export default function Profile() {
     {
       icon: <MaterialIcons name="history" size={26} color="#1d1664" />,
       title: "Booking History",
-      route: "/customerTabs/BookingHistory",
-    },
-    {
-      icon: <Ionicons name="notifications-outline" size={26} color="#1d1664" />,
-      title: "Notifications",
-      route: "/customerTabs/notification",
+      route: "/customerTabs/profilePages/BookingHistory",
     },
     {
       icon: <MaterialIcons name="help-outline" size={26} color="#1d1664" />,
       title: "Help & Support",
-      route: "/customerTabs/helpAndSupport",
+      route: "/customerTabs/profilePages/helpAndSupport",
     },
     {
       icon: <MaterialIcons name="settings" size={26} color="#1d1664" />,
       title: "Settings",
-      route: "/customerTabs/settings",
+      route: "/customerTabs/profilePages/settings",
     },
   ];
 
@@ -114,9 +109,9 @@ export default function Profile() {
               avatar_url: "",
             });
 
-            // Navigate to login with reset to prevent going back
+            // Navigate to welcome screen with reset to prevent going back
             router.dismissAll();
-            router.replace("/auth/customer/customerLogin");
+            router.replace("/open");
           } catch (error) {
             console.error("Error during logout:", error);
           } finally {
@@ -164,7 +159,9 @@ export default function Profile() {
 
             <TouchableOpacity
               className="mt-3 bg-white/20 px-4 py-2 rounded-lg"
-              onPress={() => router.push("/customerTabs/EditProfile")}
+              onPress={() =>
+                router.push("/customerTabs/profilePages/EditProfile")
+              }
             >
               <Text className="text-white font-semibold text-sm">
                 Edit Profile
