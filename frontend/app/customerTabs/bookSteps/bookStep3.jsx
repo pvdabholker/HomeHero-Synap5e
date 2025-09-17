@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -105,6 +106,28 @@ export default function BookStep3() {
     });
   };
 
+  // Go to previous step (bookStep2) with params
+  const goBackToStep2 = () => {
+    router.replace({
+      pathname: "/customerTabs/bookSteps/bookStep2",
+      params: {
+        service,
+      },
+    });
+  };
+
+  // Handle hardware/system back button
+  useEffect(() => {
+    const onBackPress = () => {
+      goBackToStep2();
+      return true; // prevent default
+    };
+    BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => {
+      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    };
+  }, [service]);
+
   return (
     <LinearGradient
       colors={["#1d1664", "#c3c0d6"]}
@@ -115,7 +138,9 @@ export default function BookStep3() {
       <View className="flex-1" style={{ padding: 20, marginTop: 20 }}>
         {/* Header */}
         <View className="flex-row items-center mb-6">
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <TouchableOpacity onPress={goBackToStep2}>
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
           <Text className="ml-3 text-lg font-semibold text-white">
             Find a Provider
           </Text>

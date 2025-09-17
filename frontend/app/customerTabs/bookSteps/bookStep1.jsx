@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  BackHandler,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Ionicons,
@@ -79,6 +86,23 @@ export default function BookService() {
     });
   };
 
+  // Go back to home (since this is step 1)
+  const goBackToHome = () => {
+    router.replace("/customerTabs/home");
+  };
+
+  // Handle hardware/system back button
+  useEffect(() => {
+    const onBackPress = () => {
+      goBackToHome();
+      return true; // prevent default
+    };
+    BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => {
+      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    };
+  }, []);
+
   return (
     <LinearGradient
       colors={["#1d1664", "#c3c0d6"]}
@@ -88,7 +112,9 @@ export default function BookService() {
     >
       {/* Header */}
       <View className="flex-row items-center mb-6">
-        <Ionicons name="arrow-back" size={24} color="white" />
+        <TouchableOpacity onPress={goBackToHome}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
         <Text className="ml-3 text-lg font-semibold text-white">
           Book a Service
         </Text>

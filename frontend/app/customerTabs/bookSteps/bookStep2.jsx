@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  BackHandler,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
@@ -52,8 +59,7 @@ export default function SetLocation() {
       if (data.results && data.results.length > 0) {
         setAddress(data.results[0].formatted_address);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   // 🔹 Save location to backend (simple pincode extractor)
@@ -63,12 +69,18 @@ export default function SetLocation() {
       const pincode = pinMatch ? pinMatch[1] : "403001"; // default Panaji if not found
       await api.users.updateLocation({ location: address || "Goa", pincode });
       Alert.alert("Saved", "Location saved successfully");
-      router.push({ pathname: "/customerTabs/bookSteps/bookStep3", params: { service, address: address || savedAddress } });
+      router.push({
+        pathname: "/customerTabs/bookSteps/bookStep3",
+        params: { service, address: address || savedAddress },
+      });
     } catch (e) {
       const msg = e?.message || "Could not save location";
       if (msg.toLowerCase().includes("unauthorized") || msg.includes("401")) {
         Alert.alert("Login required", "Please log in to save your address.", [
-          { text: "OK", onPress: () => router.replace("/auth/customer/customerLogin") },
+          {
+            text: "OK",
+            onPress: () => router.replace("/auth/customer/customerLogin"),
+          },
         ]);
       } else {
         Alert.alert("Failed", msg);
@@ -80,15 +92,43 @@ export default function SetLocation() {
     if (!savedAddress) {
       if (authMissing) {
         Alert.alert("Login required", "Please log in to use a saved address.", [
-          { text: "OK", onPress: () => router.replace("/auth/customer/customerLogin") },
+          {
+            text: "OK",
+            onPress: () => router.replace("/auth/customer/customerLogin"),
+          },
         ]);
         return;
       }
       Alert.alert("No saved address", "Please add a new address below.");
       return;
     }
-    router.push({ pathname: "/customerTabs/bookSteps/bookStep3", params: { service, address: savedAddress } });
+    router.push({
+      pathname: "/customerTabs/bookSteps/bookStep3",
+      params: { service, address: savedAddress },
+    });
   };
+
+  // Go to previous step (bookStep1) with params
+  const goBackToStep1 = () => {
+    router.replace({
+      pathname: "/customerTabs/bookSteps/bookStep1",
+      params: {
+        service,
+      },
+    });
+  };
+
+  // Handle hardware/system back button
+  useEffect(() => {
+    const onBackPress = () => {
+      goBackToStep1();
+      return true; // prevent default
+    };
+    BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => {
+      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    };
+  }, [service]);
 
   return (
     <LinearGradient
@@ -99,7 +139,9 @@ export default function SetLocation() {
     >
       {/* Header */}
       <View className="flex-row items-center mb-6">
-        <Ionicons name="arrow-back" size={24} color="white" />
+        <TouchableOpacity onPress={goBackToStep1}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
         <Text className="ml-3 text-lg font-semibold text-white">
           Set Your Location
         </Text>
@@ -140,7 +182,10 @@ export default function SetLocation() {
         <View className="flex-1">
           <Text className="font-semibold text-gray-800">Saved Address</Text>
           <Text className="text-sm text-gray-500">
-            {savedAddress || (authMissing ? "Please log in to see your saved address" : "No saved address")}
+            {savedAddress ||
+              (authMissing
+                ? "Please log in to see your saved address"
+                : "No saved address")}
           </Text>
         </View>
         <Text className="text-[#1d1664] font-semibold">Use</Text>

@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -91,92 +93,102 @@ export default function ProfileDetails() {
       end={{ x: 0.5, y: 1 }}
       className="flex-1"
     >
-      <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
-        <View className="mt-16">
-          <Text className="text-white text-2xl font-bold text-center mb-8">
-            Complete Your Profile
-          </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1 px-8"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="mt-16">
+            <Text className="text-white text-2xl font-bold text-center mb-8">
+              Complete Your Profile
+            </Text>
 
-          <View className="space-y-6">
-            <View>
-              <Text className="text-white mb-2">Full Name</Text>
-              <TextInput
-                className="bg-white rounded-lg p-3"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChangeText={setFullName}
-              />
+            <View className="space-y-6">
+              <View>
+                <Text className="text-white mb-2">Full Name</Text>
+                <TextInput
+                  className="bg-white rounded-lg p-3"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChangeText={setFullName}
+                />
+              </View>
+
+              <View>
+                <Text className="text-white mb-2">Contact Number</Text>
+                <TextInput
+                  className="bg-white rounded-lg p-3"
+                  placeholder="Enter contact number"
+                  keyboardType="phone-pad"
+                  value={contact}
+                  onChangeText={setContact}
+                />
+              </View>
+
+              <View>
+                <Text className="text-white mb-2">Service Type</Text>
+                <TextInput
+                  className="bg-white rounded-lg p-3"
+                  placeholder="e.g., Plumber, Electrician"
+                  value={serviceType}
+                  onChangeText={setServiceType}
+                />
+              </View>
+
+              <View>
+                <Text className="text-white mb-2">Service Location</Text>
+                <TextInput
+                  className="bg-white rounded-lg p-3"
+                  placeholder="City, State"
+                  value={location}
+                  onChangeText={setLocation}
+                />
+              </View>
+
+              <View>
+                <Text className="text-white mb-2">Experience (Years)</Text>
+                <TextInput
+                  className="bg-white rounded-lg p-3"
+                  placeholder="Years of experience"
+                  keyboardType="numeric"
+                  value={experience}
+                  onChangeText={setExperience}
+                />
+              </View>
+
+              <View>
+                <Text className="text-white mb-2">Hourly Rate (₹)</Text>
+                <TextInput
+                  className="bg-white rounded-lg p-3"
+                  placeholder="Your hourly rate"
+                  keyboardType="numeric"
+                  value={hourlyRate}
+                  onChangeText={setHourlyRate}
+                />
+              </View>
             </View>
 
-            <View>
-              <Text className="text-white mb-2">Contact Number</Text>
-              <TextInput
-                className="bg-white rounded-lg p-3"
-                placeholder="Enter contact number"
-                keyboardType="phone-pad"
-                value={contact}
-                onChangeText={setContact}
-              />
-            </View>
-
-            <View>
-              <Text className="text-white mb-2">Service Type</Text>
-              <TextInput
-                className="bg-white rounded-lg p-3"
-                placeholder="e.g., Plumber, Electrician"
-                value={serviceType}
-                onChangeText={setServiceType}
-              />
-            </View>
-
-            <View>
-              <Text className="text-white mb-2">Service Location</Text>
-              <TextInput
-                className="bg-white rounded-lg p-3"
-                placeholder="City, State"
-                value={location}
-                onChangeText={setLocation}
-              />
-            </View>
-
-            <View>
-              <Text className="text-white mb-2">Experience (Years)</Text>
-              <TextInput
-                className="bg-white rounded-lg p-3"
-                placeholder="Years of experience"
-                keyboardType="numeric"
-                value={experience}
-                onChangeText={setExperience}
-              />
-            </View>
-
-            <View>
-              <Text className="text-white mb-2">Hourly Rate (₹)</Text>
-              <TextInput
-                className="bg-white rounded-lg p-3"
-                placeholder="Your hourly rate"
-                keyboardType="numeric"
-                value={hourlyRate}
-                onChangeText={setHourlyRate}
-              />
-            </View>
+            <TouchableOpacity
+              disabled={loading}
+              className={`mt-8 p-4 rounded-xl ${loading ? "bg-gray-400" : "bg-cyan-400"}`}
+              onPress={handleContinue}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white text-center font-medium text-lg">
+                  Continue
+                </Text>
+              )}
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            disabled={loading}
-            className={`mt-8 p-4 rounded-xl ${loading ? "bg-gray-400" : "bg-cyan-400"}`}
-            onPress={handleContinue}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white text-center font-medium text-lg">
-                Continue
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }

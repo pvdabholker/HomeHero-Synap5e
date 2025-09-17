@@ -45,15 +45,17 @@ export default function UploadDocuments() {
       setTimeout(() => {
         setLoading(false);
 
-        // Emit event to notify service provider home page
-        DeviceEventEmitter.emit("USER_LOGGED_IN");
-
-        Alert.alert("Success", "Documents uploaded successfully!", [
-          {
-            text: "OK",
-            onPress: () => router.push("/serviceProviderTabs/home"),
-          },
-        ]);
+        Alert.alert(
+          "Account Created Successfully!",
+          "Your service provider account has been created successfully. Please login with your credentials to access your dashboard.",
+          [
+            {
+              text: "Go to Login",
+              onPress: () =>
+                router.push("/auth/serviceProvider/serviceProviderLogin"),
+            },
+          ]
+        );
       }, 2000);
     } catch (error) {
       console.error(error);
