@@ -1,4 +1,3 @@
-from app.core.database import engine, Base
 from app.core.config import settings
 
 
