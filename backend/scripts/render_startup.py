@@ -1,4 +1,5 @@
-from ..app.core.config import settings
+# backend/scripts/render_startup.py
+from app.core.config import settings  # absolute import
 
 
 def wait_for_db():
@@ -11,12 +12,10 @@ def initialize_render_db():
     print("🚀 Initializing HomeHero database on Render...")
 
     try:
-        # Wait for database to be ready
         if not wait_for_db():
             print("❌ Database not ready.")
             return False
 
-        # RUN MIGRATIONS FIRST
         print("📋 Running database migrations...")
         from alembic.config import Config
         from alembic import command
@@ -26,12 +25,6 @@ def initialize_render_db():
         command.upgrade(alembic_cfg, "head")
         print("✅ Migrations completed!")
 
-        # Then create tables (if needed, usually not required after migrations)
-        # Base.metadata.create_all(bind=engine)
-
-        # Rest of your existing code...
-        # Check if data already exists, create dummy data, etc.
-
         return True
 
     except Exception as e:
@@ -40,3 +33,7 @@ def initialize_render_db():
 
         traceback.print_exc()
         return False
+
+
+if __name__ == "__main__":
+    initialize_render_db()
