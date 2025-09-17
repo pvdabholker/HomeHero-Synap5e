@@ -24,7 +24,7 @@ export default function OtpVerify() {
     setOtp(newOtp);
 
     // Move to next input automatically
-    if (text && index < 5) {
+    if (text && index < 5 && inputs.current[index + 1]) {
       inputs.current[index + 1].focus();
     }
   };
