@@ -43,7 +43,7 @@ class Booking(Base):
 
     cancellation_reason = Column(Text)
     canceled_by = Column(String)
-    caceled_at = Column(DateTime(timezone=True))
+    canceled_at = Column(DateTime(timezone=True))
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
