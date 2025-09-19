@@ -36,6 +36,66 @@ def wait_for_db():
     return False
 
 
+def run_migrations():
+    """Run database migrations"""
+    print("🔄 Running database migrations...")
+    try:
+        from alembic.config import Config
+        from alembic import command
+        from app.core.config import settings
+        
+        alembic_cfg = Config("alembic.ini")
+        alembic_cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+        
+        # Run migrations to head
+        command.upgrade(alembic_cfg, "head")
+        print("✅ Database migrations completed!")
+        return True
+        
+    except Exception as e:
+        print(f"⚠️  Migration failed: {e}")
+        # For now, continue even if migrations fail
+        return False
+
+
+def add_missing_columns_manually():
+    """Manually add missing columns if migrations fail"""
+    print("🔧 Manually adding missing booking columns...")
+    try:
+        from app.core.database import engine
+        from sqlalchemy import text
+        
+        with engine.connect() as connection:
+            # Check if columns exist, if not add them
+            result = connection.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='bookings' AND column_name IN ('cancellation_reason', 'canceled_by', 'canceled_at')
+            """))
+            
+            existing_columns = [row[0] for row in result]
+            
+            if 'cancellation_reason' not in existing_columns:
+                connection.execute(text("ALTER TABLE bookings ADD COLUMN cancellation_reason TEXT"))
+                print("➕ Added cancellation_reason column")
+            
+            if 'canceled_by' not in existing_columns:
+                connection.execute(text("ALTER TABLE bookings ADD COLUMN canceled_by VARCHAR"))
+                print("➕ Added canceled_by column")
+            
+            if 'canceled_at' not in existing_columns:
+                connection.execute(text("ALTER TABLE bookings ADD COLUMN canceled_at TIMESTAMP WITH TIME ZONE"))
+                print("➕ Added canceled_at column")
+            
+            connection.commit()
+            print("✅ Missing columns added successfully!")
+            return True
+            
+    except Exception as e:
+        print(f"❌ Failed to add columns manually: {e}")
+        return False
+
+
 def initialize_render_db():
     """Initialize database for Render deployment"""
     print("🚀 Initializing HomeHero database on Render...")
@@ -45,11 +105,19 @@ def initialize_render_db():
         if not wait_for_db():
             return False
         
+        # Try running migrations first
+        migration_success = run_migrations()
+        
+        # If migrations fail, try manual column addition
+        if not migration_success:
+            print("🔧 Attempting manual column addition...")
+            add_missing_columns_manually()
+        
         # Import after database is ready
         from app.core.database import engine, Base
         from scripts.create_dummy_data import create_dummy_data
         
-        # Create all tables
+        # Create all tables (this will create new tables but won't modify existing ones)
         print("📋 Creating database tables...")
         Base.metadata.create_all(bind=engine)
         
