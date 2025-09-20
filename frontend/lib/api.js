@@ -219,6 +219,111 @@ export const api = {
       }),
   },
 
+  // Admin
+  admin: {
+    getUsers: async (skip = 0, limit = 100) =>
+      request(`/api/admin/users?skip=${skip}&limit=${limit}`),
+    getProviders: async (skip = 0, limit = 100) =>
+      request(`/api/admin/providers?skip=${skip}&limit=${limit}`),
+    getBookings: async () => request("/api/admin/bookings"),
+    approveProvider: async (providerId) =>
+      request(`/api/admin/providers/${providerId}/approve`, { method: "POST" }),
+    getComplaints: async () => request("/api/admin/complaints"),
+
+    // Additional admin functions for the admin pages
+    updateUserStatus: async (userId, isActive) =>
+      request(`/api/admin/users/${userId}/status`, {
+        method: "PATCH",
+        body: { is_active: isActive },
+      }),
+    deleteUser: async (userId) =>
+      request(`/api/admin/users/${userId}`, { method: "DELETE" }),
+    updateBookingStatus: async (bookingId, status) =>
+      request(`/api/admin/bookings/${bookingId}/status`, {
+        method: "PATCH",
+        body: { status },
+      }),
+    createProvider: async (providerData) =>
+      request("/api/admin/providers", { method: "POST", body: providerData }),
+    sendAnnouncement: async (announcement) =>
+      request("/api/admin/announcements", {
+        method: "POST",
+        body: announcement,
+      }),
+    getSystemSettings: async () => request("/api/admin/settings"),
+    updateSystemSettings: async (settings) =>
+      request("/api/admin/settings", { method: "PUT", body: settings }),
+    generateReport: async (reportConfig) =>
+      request("/api/admin/reports/generate", {
+        method: "POST",
+        body: reportConfig,
+      }),
+    getAnalyticsData: async (period = "30days") =>
+      request(`/api/admin/analytics?period=${period}`),
+    getReportsData: async (period = "30days") =>
+      request(`/api/admin/reports?period=${period}`),
+  },
+
   // Utility method for getting auth token
   getToken: () => TokenStore.getAccessToken(),
+};
+
+// Helper functions for admin pages
+export const getAdminDashboard = async () => {
+  try {
+    const [users, providers, bookings] = await Promise.all([
+      api.admin.getUsers(),
+      api.admin.getProviders(),
+      api.admin.getBookings(),
+    ]);
+
+    return {
+      users: users || [],
+      providers: providers || [],
+      bookings: bookings || [],
+    };
+  } catch (error) {
+    console.error("Error fetching admin dashboard data:", error);
+    throw error;
+  }
+};
+
+export const updateUserStatus = async (userId, isActive) => {
+  return api.admin.updateUserStatus(userId, isActive);
+};
+
+export const deleteUser = async (userId) => {
+  return api.admin.deleteUser(userId);
+};
+
+export const updateBookingStatus = async (bookingId, status) => {
+  return api.admin.updateBookingStatus(bookingId, status);
+};
+
+export const createProvider = async (providerData) => {
+  return api.admin.createProvider(providerData);
+};
+
+export const sendAnnouncement = async (announcement) => {
+  return api.admin.sendAnnouncement(announcement);
+};
+
+export const getSystemSettings = async () => {
+  return api.admin.getSystemSettings();
+};
+
+export const updateSystemSettings = async (settings) => {
+  return api.admin.updateSystemSettings(settings);
+};
+
+export const generateReport = async (reportConfig) => {
+  return api.admin.generateReport(reportConfig);
+};
+
+export const getAnalyticsData = async (period) => {
+  return api.admin.getAnalyticsData(period);
+};
+
+export const getReportsData = async (period) => {
+  return api.admin.getReportsData(period);
 };

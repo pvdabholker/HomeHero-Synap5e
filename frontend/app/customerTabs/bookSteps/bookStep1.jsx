@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { api } from "../../../lib/api";
 
 export default function BookService() {
@@ -92,16 +93,21 @@ export default function BookService() {
   };
 
   // Handle hardware/system back button
-  useEffect(() => {
-    const onBackPress = () => {
-      goBackToHome();
-      return true; // prevent default
-    };
-    BackHandler.addEventListener("hardwareBackPress", onBackPress);
-    return () => {
-      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        goBackToHome();
+        return true; // prevent default
+      };
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => {
+        backHandler.remove();
+      };
+    }, [])
+  );
 
   return (
     <LinearGradient

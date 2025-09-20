@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Platform,
 } from "react-native";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -47,7 +49,7 @@ export default function ServiceProviderHome() {
       await loadDashboardData();
       await loadUserName();
     } catch (error) {
-      console.error("Error initializing app:", error);
+      // App initialization error - silent handling
     }
   };
 
@@ -56,23 +58,14 @@ export default function ServiceProviderHome() {
       const accessToken = await AsyncStorage.getItem("access_token");
       const refreshToken = await AsyncStorage.getItem("refresh_token");
 
-      console.log("Token initialization:", {
-        hasAccessToken: !!accessToken,
-        tokenLength: accessToken?.length || 0,
-        tokenPreview: accessToken?.substring(0, 20) + "..." || "none",
-      });
-
       if (accessToken) {
         TokenStore.setTokens({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
-        console.log("Tokens set in TokenStore successfully");
-      } else {
-        console.log("No access token found in AsyncStorage");
       }
     } catch (error) {
-      console.error("Error initializing tokens:", error);
+      // Token initialization error - silent handling
     }
   };
   const loadUserName = async () => {
@@ -82,7 +75,7 @@ export default function ServiceProviderHome() {
         setUserName(storedUserName);
       }
     } catch (error) {
-      console.error("Error loading user name:", error);
+      // Error loading user name - silent handling
     }
   };
 
@@ -91,9 +84,7 @@ export default function ServiceProviderHome() {
       setLoading(true);
 
       // First test basic authentication
-      console.log("Testing authentication with users/me...");
       const userProfile = await api.users.me();
-      console.log("User profile loaded:", userProfile);
 
       // Check if user is a provider
       if (userProfile?.user_type !== "provider") {
@@ -101,32 +92,22 @@ export default function ServiceProviderHome() {
       }
 
       // Load provider profile
-      console.log("Loading provider profile...");
       const profile = await api.providers.me();
-      console.log("Provider profile loaded:", profile);
       setProviderProfile(profile);
 
       // Load bookings
-      console.log("Loading bookings...");
       let bookings = [];
       try {
         bookings = await api.bookings.my();
-        console.log("Bookings loaded:", bookings);
       } catch (bookingError) {
-        console.error(
-          "Failed to load bookings with my-bookings endpoint:",
-          bookingError
-        );
+        // Failed to load bookings with my-bookings endpoint - try alternative
 
         // Try alternative endpoint for pending bookings
         try {
-          console.log("Trying pending bookings endpoint...");
           const pendingBookings = await api.bookings.pending();
-          console.log("Pending bookings loaded:", pendingBookings);
           bookings = pendingBookings || [];
         } catch (pendingError) {
-          console.error("Failed to load pending bookings:", pendingError);
-          console.log("Continuing with empty bookings array");
+          // Failed to load pending bookings - use empty array
           bookings = [];
         }
       }
@@ -151,7 +132,7 @@ export default function ServiceProviderHome() {
         isAvailable: profile?.availability || false,
       });
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
+      // Error loading dashboard data - handle silently
 
       // Check for specific error types
       if (
@@ -193,7 +174,7 @@ export default function ServiceProviderHome() {
         `You are now ${newStatus ? "available" : "unavailable"} for new bookings`
       );
     } catch (error) {
-      console.error("Error updating availability:", error);
+      // Error updating availability - show user alert
       Alert.alert("Error", "Failed to update availability status.");
     }
   };
@@ -207,12 +188,9 @@ export default function ServiceProviderHome() {
         // Navigate to contact customer page
         break;
       case 3:
-        router.push("/serviceProviderTabs/notifications");
-        break;
-      case 4:
         // Navigate to availability page
         break;
-      case 5:
+      case 4:
         // Navigate to job completion page
         break;
     }
@@ -233,18 +211,12 @@ export default function ServiceProviderHome() {
     },
     {
       id: 3,
-      title: "Notifications",
-      subtitle: "Read recent updates",
-      icon: <Ionicons name="notifications-outline" size={22} color="#333" />,
-    },
-    {
-      id: 4,
       title: "Availability",
       subtitle: "See your schedule",
       icon: <FontAwesome5 name="calendar-check" size={20} color="#333" />,
     },
     {
-      id: 5,
+      id: 4,
       title: "Job Completion",
       subtitle: "Finalized completed jobs",
       icon: <Feather name="check-square" size={20} color="#333" />,
@@ -255,18 +227,26 @@ export default function ServiceProviderHome() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#1d1664" }}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor="#1d1664"
-        translucent={false}
+        backgroundColor="transparent"
+        translucent={true}
       />
       <LinearGradient
         colors={["#1d1664", "#c3c0d6"]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={{ flex: 1 }}
+        style={{
+          flex: 1,
+          paddingTop: Platform.OS === "android" ? Constants.statusBarHeight : 0,
+        }}
       >
-        <View className="flex-row justify-between items-center px-5 py-4 mt-2">
+        <View
+          className="flex-row justify-between items-center px-5 py-4"
+          style={{
+            paddingTop: Platform.OS === "ios" ? 10 : 8,
+          }}
+        >
           <Ionicons name="home" size={26} color="white" />
-          <Text className="text-xl font-bold text-cyan-400">HomeHero</Text>
+          <Text className="text-2xl font-bold text-cyan-400">HomeHero</Text>
           <TouchableOpacity
             onPress={() => router.push("/serviceProviderTabs/profile")}
             className="flex-row items-center bg-white/20 rounded-full px-3 py-2 border border-white/30"
@@ -402,7 +382,7 @@ export default function ServiceProviderHome() {
             >
               <View className="flex-row items-center space-x-3">
                 {item.icon}
-                <View>
+                <View className="ml-2">
                   <Text className="text-base font-semibold text-black">
                     {item.title}
                   </Text>

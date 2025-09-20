@@ -122,9 +122,12 @@ export default function BookStep3() {
       goBackToStep2();
       return true; // prevent default
     };
-    BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress
+    );
     return () => {
-      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+      backHandler.remove();
     };
   }, [service]);
 

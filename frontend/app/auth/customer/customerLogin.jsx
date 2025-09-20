@@ -31,22 +31,14 @@ export default function CustomerLogin() {
   const [loading, setLoading] = useState(false);
   const [backPressedOnce, setBackPressedOnce] = useState(false);
 
-  // Prevent going back to authenticated pages after logout
+  const router = useRouter();
+
+  // Handle back button to go to open.jsx
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        if (Platform.OS === "android") {
-          if (backPressedOnce) {
-            BackHandler.exitApp();
-            return true;
-          } else {
-            setBackPressedOnce(true);
-            ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT);
-            setTimeout(() => setBackPressedOnce(false), 2000);
-            return true;
-          }
-        }
-        return false;
+        router.push("/open");
+        return true; // Prevent default back behavior
       };
 
       const subscription = BackHandler.addEventListener(
@@ -54,9 +46,8 @@ export default function CustomerLogin() {
         onBackPress
       );
       return () => subscription.remove();
-    }, [backPressedOnce])
+    }, [router])
   );
-  const router = useRouter();
 
   const handleLogin = async () => {
     if (!emailOrPhone || !password) {

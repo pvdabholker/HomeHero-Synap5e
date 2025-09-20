@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { api } from "../../lib/api";
 
 export default function Notifications() {
@@ -89,6 +91,24 @@ export default function Notifications() {
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // Handle hardware/system back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.replace("/customerTabs/home");
+        return true; // prevent default
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => {
+        backHandler.remove();
+      };
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

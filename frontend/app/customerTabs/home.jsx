@@ -157,19 +157,37 @@ export default function HomeScreen() {
       // Clear any cached data first
       setUserName("");
       setUserLocation("Goa");
-      setAvatarUrl("");
+
+      // Don't clear avatar if it was recently updated
+      const currentTime = Date.now();
+      const lastAvatarUpdate = global.lastAvatarUpdateTime || 0;
+      const preserveAvatar = currentTime - lastAvatarUpdate < 2000;
+
+      if (!preserveAvatar) {
+        setAvatarUrl("");
+      }
 
       const me = await api.users.me();
       if (me) {
         setUserName(me.name || "");
         setUserLocation(me.location || me.pincode || "Goa");
-        setAvatarUrl(me.avatar_url || "");
+
+        // Only update avatar if it wasn't recently updated via event
+        if (!preserveAvatar) {
+          setAvatarUrl(me.avatar_url || "");
+        }
       }
     } catch (e) {
       // If API call fails, ensure we have clean state
       setUserName("");
       setUserLocation("Goa");
-      setAvatarUrl("");
+
+      // Don't clear avatar if it was recently updated
+      const currentTime = Date.now();
+      const lastAvatarUpdate = global.lastAvatarUpdateTime || 0;
+      if (currentTime - lastAvatarUpdate > 2000) {
+        setAvatarUrl("");
+      }
     }
   }, []);
 

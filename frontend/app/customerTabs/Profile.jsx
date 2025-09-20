@@ -31,11 +31,19 @@ export default function Profile() {
   const loadMe = useCallback(async () => {
     try {
       const me = await api.users.me();
-      setUser({
+
+      // Preserve current avatar if it was recently updated
+      const currentTime = Date.now();
+      const lastAvatarUpdate = global.lastAvatarUpdateTime || 0;
+      const useCurrentAvatar = currentTime - lastAvatarUpdate < 2000;
+
+      setUser((currentUser) => ({
         name: me?.name || "",
         phone: me?.phone || "",
-        avatar_url: me?.avatar_url || "",
-      });
+        avatar_url: useCurrentAvatar
+          ? currentUser.avatar_url
+          : me?.avatar_url || "",
+      }));
     } catch (e) {
       setUser({ name: "Guest", phone: "", avatar_url: "" });
     }
@@ -65,6 +73,24 @@ export default function Profile() {
     useCallback(() => {
       loadMe();
     }, [loadMe])
+  );
+
+  // Handle hardware/system back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.replace("/customerTabs/home");
+        return true; // prevent default
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => {
+        backHandler.remove();
+      };
+    }, [])
   );
 
   const menuItems = [
@@ -148,7 +174,7 @@ export default function Profile() {
               source={
                 user.avatar_url
                   ? { uri: user.avatar_url }
-                  : require("../../assets/images/logo.png")
+                  : require("../../assets/images/avatar.png")
               }
               className="w-24 h-24 rounded-full border-4 border-white"
             />

@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -81,6 +82,35 @@ export default function ServiceProviderLogin() {
             return;
           }
 
+          // Check if provider account is pending verification
+          try {
+            const providerProfile = await api.providers.me();
+            if (providerProfile && providerProfile.status === "pending") {
+              Alert.alert(
+                "Account Pending Verification",
+                "Your service provider account is currently under review by our admin team. You will be notified once your account is approved. Please be patient as this process may take 24-48 hours.",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      // Clear stored data and redirect to login
+                      AsyncStorage.multiRemove([
+                        "access_token",
+                        "token_type",
+                        "isLoggedIn",
+                      ]);
+                    },
+                  },
+                ]
+              );
+              setLoading(false);
+              return;
+            }
+          } catch (providerError) {
+            // If provider profile not found or error, still allow login
+            // (in case it's an existing account without provider profile)
+          }
+
           // Store user information
           await AsyncStorage.setItem("userType", "provider");
           await AsyncStorage.setItem(
@@ -142,109 +172,118 @@ export default function ServiceProviderLogin() {
   };
 
   return (
-    <LinearGradient
-      colors={["#1d1664", "#c3c0d6"]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      className="flex-1"
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <SafeAreaView className="flex-1">
+      <LinearGradient
+        colors={["#1d1664", "#c3c0d6"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
         className="flex-1"
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="flex-1"
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
         >
-          {/* Logo */}
-          <View className="flex justify-center items-center">
-            <Image
-              source={require("../../../assets/images/login.jpg")}
-              className="h-[200px] w-[200px] mt-24"
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Inputs */}
-          <View className="mt-14 flex flex-col gap-8">
-            <TextInput
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="Email or Phone Number"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={emailOrPhone}
-              onChangeText={setEmailOrPhone}
-            />
-            <TextInput
-              secureTextEntry={true}
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
-
-          {/* Remember Me + Forgot Password */}
-          <View className="flex-row justify-between mt-4 px-10 items-center">
-            <View className="flex-row items-center">
-              <Checkbox
-                value={isChecked}
-                onValueChange={setIsChecked}
-                color={isChecked ? "#00EAFF" : undefined}
-                className="bg-[#E5DFDF] h-4 w-4"
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: "center",
+              paddingBottom: 100,
+            }}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}
+          >
+            {/* Logo */}
+            <View className="flex justify-center items-center">
+              <Image
+                source={require("../../../assets/images/login.jpg")}
+                className="h-[160px] w-[160px] mt-8"
+                resizeMode="contain"
               />
-              <Text className="text-white ml-2">Remember me</Text>
             </View>
-            <TouchableOpacity
-              onPress={() =>
-                Alert.alert(
-                  "Forgot Password",
-                  "Will integrate with backend later"
-                )
-              }
-            >
-              <Text className="text-white underline">Forgot Password?</Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Login Button */}
-          <View className="mt-8">
-            <TouchableOpacity
-              disabled={loading}
-              className={`p-3 w-1/2 m-auto rounded-xl ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
-              onPress={handleLogin}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white text-center font-medium text-lg">
-                  Log in
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Divider + Signup */}
-          <View className="mt-8 mb-8">
-            <View className="flex-row items-center m-5">
-              <View className="flex-1 h-[1px] bg-gray-800 w-2/3" />
-              <Text className="mx-3 text-gray-900">or</Text>
-              <View className="flex-1 h-[1px] bg-gray-800" />
+            {/* Inputs */}
+            <View className="mt-6 flex flex-col gap-5">
+              <TextInput
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="Email or Phone Number"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={emailOrPhone}
+                onChangeText={setEmailOrPhone}
+              />
+              <TextInput
+                secureTextEntry={true}
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+              />
             </View>
-            <View className="flex-row justify-center items-center mt-4">
-              <Text className="text-white">Don't have an account? </Text>
+
+            {/* Remember Me + Forgot Password */}
+            <View className="flex-row justify-between mt-4 px-10 items-center">
+              <View className="flex-row items-center">
+                <Checkbox
+                  value={isChecked}
+                  onValueChange={setIsChecked}
+                  color={isChecked ? "#00EAFF" : undefined}
+                  className="bg-[#E5DFDF] h-4 w-4"
+                />
+                <Text className="text-white ml-2">Remember me</Text>
+              </View>
               <TouchableOpacity
                 onPress={() =>
-                  router.push("/auth/serviceProvider/serviceProviderSignUp")
+                  Alert.alert(
+                    "Forgot Password",
+                    "Will integrate with backend later"
+                  )
                 }
               >
-                <Text className="text-[#00EAFF] font-semibold">Sign up</Text>
+                <Text className="text-white underline">Forgot Password?</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+
+            {/* Login Button */}
+            <View className="mt-8">
+              <TouchableOpacity
+                disabled={loading}
+                className={`p-3 w-1/2 m-auto rounded-xl ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
+                onPress={handleLogin}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white text-center font-medium text-lg">
+                    Log in
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Divider + Signup */}
+            <View className="mt-8 mb-8">
+              <View className="flex-row items-center m-5">
+                <View className="flex-1 h-[1px] bg-gray-800 w-2/3" />
+                <Text className="mx-3 text-gray-900">or</Text>
+                <View className="flex-1 h-[1px] bg-gray-800" />
+              </View>
+              <View className="flex-row justify-center items-center mt-4">
+                <Text className="text-white">Don't have an account? </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push("/auth/serviceProvider/serviceProviderSignUp")
+                  }
+                >
+                  <Text className="text-[#00EAFF] font-semibold">Sign up</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }

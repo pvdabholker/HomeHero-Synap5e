@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  SafeAreaView,
 } from "react-native";
 import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -64,173 +65,163 @@ export default function ServiceProviderSignUp() {
 
     setLoading(true);
     try {
-      // Register the user as a service provider using the structured api object
-      const response = await api.auth.register({
+      // Store registration data temporarily - don't create account yet
+      const registrationData = {
         name: fullName.trim(),
         phone: phone.trim(),
         email: email.trim(),
         password: password.trim(),
         user_type: "provider",
-      });
+      };
 
-      if (response && response.user_id) {
-        Alert.alert(
-          "Registration Successful!",
-          "Your service provider account has been created. Please proceed to complete your profile.",
-          [
-            {
-              text: "Continue",
-              onPress: () => {
-                // Store temporary registration data for the profile setup
-                AsyncStorage.setItem("tempUserId", response.user_id);
-                router.push("/auth/serviceProvider/profileDetails");
-              },
+      // Store data in AsyncStorage for next steps
+      await AsyncStorage.setItem(
+        "tempRegistrationData",
+        JSON.stringify(registrationData)
+      );
+
+      Alert.alert(
+        "Information Saved",
+        "Your basic information has been saved. Please proceed to complete your profile.",
+        [
+          {
+            text: "Continue",
+            onPress: () => {
+              router.push("/auth/serviceProvider/profileDetails");
             },
-          ]
-        );
-      } else {
-        Alert.alert(
-          "Registration Failed",
-          "Unable to create account. Please try again."
-        );
-      }
+          },
+        ]
+      );
     } catch (error) {
-      console.error("Signup error:", error);
-
-      let errorMessage = "Something went wrong. Please try again.";
-
-      if (error.response) {
-        if (error.response.status === 400) {
-          if (error.response.data?.detail) {
-            errorMessage = error.response.data.detail;
-          } else {
-            errorMessage = "Invalid input. Please check your information.";
-          }
-        } else if (error.response.status === 409) {
-          errorMessage =
-            "Email or phone number already exists. Please try logging in instead.";
-        }
-      } else if (error.request) {
-        errorMessage =
-          "Network error. Please check your connection and try again.";
-      }
-
-      Alert.alert("Registration Failed", errorMessage);
+      // Error saving registration data
+      Alert.alert(
+        "Error",
+        "Failed to save registration data. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <LinearGradient
-      colors={["#1d1664", "#c3c0d6"]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      className="flex-1"
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <SafeAreaView className="flex-1">
+      <LinearGradient
+        colors={["#1d1664", "#c3c0d6"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
         className="flex-1"
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="flex-1"
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
         >
-          {/* Image */}
-          <View className="flex justify-center items-center">
-            <Image
-              source={require("../../../assets/images/signup.jpg")}
-              className="h-[200px] w-[200px] mt-24"
-              resizeMode="contain"
-            />
-          </View>
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: "center",
+              paddingBottom: 100,
+            }}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}
+          >
+            {/* Image */}
+            <View className="flex justify-center items-center">
+              <Image
+                source={require("../../../assets/images/signup.jpg")}
+                className="h-[160px] w-[160px] mt-12"
+                resizeMode="contain"
+              />
+            </View>
 
-          {/* Inputs */}
-          <View className="mt-14 flex flex-col gap-6">
-            <TextInput
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="Full Name"
-              value={fullName}
-              onChangeText={setFullName}
-            />
-            <TextInput
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="Phone Number"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-            />
-            <TextInput
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="Email Address"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              secureTextEntry={true}
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="New Password"
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TextInput
-              secureTextEntry={true}
-              className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
-              placeholder="Confirm Password"
-              value={confirm}
-              onChangeText={setConfirm}
-            />
-          </View>
+            {/* Inputs */}
+            <View className="mt-8 flex flex-col gap-5">
+              <TextInput
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="Full Name"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+              <TextInput
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="Phone Number"
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+              />
+              <TextInput
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="Email Address"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                secureTextEntry={true}
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="New Password"
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TextInput
+                secureTextEntry={true}
+                className="w-4/5 h-12 rounded-2xl m-auto pl-4 bg-[#E5DFDF]"
+                placeholder="Confirm Password"
+                value={confirm}
+                onChangeText={setConfirm}
+              />
+            </View>
 
-          {/* Terms & Conditions */}
-          <View className="flex-row items-center w-4/5 mx-auto mt-4">
-            <Checkbox
-              value={acceptTerms}
-              onValueChange={setAcceptTerms}
-              color={acceptTerms ? "#00EAFF" : undefined}
-              className="h-4 w-4 bg-white"
-            />
-            <Text className="ml-2 text-white">
-              I agree to the{" "}
-              <Text className="underline text-[#00EAFF]">
-                Terms & Conditions
-              </Text>
-            </Text>
-          </View>
-
-          {/* Sign Up Button */}
-          <View className="mt-8">
-            <TouchableOpacity
-              disabled={loading}
-              className={`p-3 w-1/2 m-auto rounded-xl ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
-              onPress={handleSignUp}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white text-center font-medium text-lg">
-                  Sign Up
+            {/* Terms & Conditions */}
+            <View className="flex-row items-center w-4/5 mx-auto mt-4">
+              <Checkbox
+                value={acceptTerms}
+                onValueChange={setAcceptTerms}
+                color={acceptTerms ? "#00EAFF" : undefined}
+                className="h-4 w-4 bg-white"
+              />
+              <Text className="ml-2 text-white">
+                I agree to the{" "}
+                <Text className="underline text-[#00EAFF]">
+                  Terms & Conditions
                 </Text>
-              )}
-            </TouchableOpacity>
-          </View>
+              </Text>
+            </View>
 
-          {/* Redirect to Login */}
-          <View className="flex-row justify-center items-center mt-4">
-            <Text className="text-white">Already have an account? </Text>
-            <TouchableOpacity
-              onPress={() =>
-                router.push("/auth/serviceProvider/serviceProviderLogin")
-              }
-            >
-              <Text className="text-[#00EAFF] font-semibold">Log In</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+            {/* Sign Up Button */}
+            <View className="mt-8">
+              <TouchableOpacity
+                disabled={loading}
+                className={`p-3 w-1/2 m-auto rounded-xl ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
+                onPress={handleSignUp}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white text-center font-medium text-lg">
+                    Sign Up
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Redirect to Login */}
+            <View className="flex-row justify-center items-center mt-4">
+              <Text className="text-white">Already have an account? </Text>
+              <TouchableOpacity
+                onPress={() =>
+                  router.push("/auth/serviceProvider/serviceProviderLogin")
+                }
+              >
+                <Text className="text-[#00EAFF] font-semibold">Log In</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }

@@ -8,6 +8,9 @@ import {
   Alert,
   DeviceEventEmitter,
   BackHandler,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -73,6 +76,10 @@ export default function EditProfile() {
       try {
         const res = await api.users.uploadAvatar({ uri, name: "avatar.jpg" });
         const newUrl = res?.avatar_url || uri;
+
+        // Set global timestamp to prevent immediate reload
+        global.lastAvatarUpdateTime = Date.now();
+
         DeviceEventEmitter.emit("USER_AVATAR_UPDATED", { avatar_url: newUrl });
         Alert.alert("Updated", "Profile photo updated successfully");
       } catch (e) {
@@ -118,87 +125,101 @@ export default function EditProfile() {
       end={{ x: 0.5, y: 1 }}
       className="flex-1"
     >
-      <View className="flex-1 px-6 pt-14">
-        {/* Profile Picture */}
-        <View className="items-center mb-8">
-          <TouchableOpacity onPress={pickImage}>
-            <Image
-              source={
-                profilePic || require("../../../assets/images/avatar.png")
-              }
-              className="w-28 h-28 rounded-full border-4 border-white"
-            />
-            <Text className="text-white mt-2 underline">Change Photo</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 56,
+            paddingBottom: 100, // Extra bottom padding to ensure button is visible above nav bar
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Profile Picture */}
+          <View className="items-center mb-8">
+            <TouchableOpacity onPress={pickImage}>
+              <Image
+                source={
+                  profilePic || require("../../../assets/images/avatar.png")
+                }
+                className="w-28 h-28 rounded-full border-4 border-white"
+              />
+              <Text className="text-white mt-2 underline">Change Photo</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Input Fields */}
+          <Text className="text-white mb-2">Full Name</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            className="bg-white rounded-xl p-3 mb-6 text-gray-800"
+          />
+
+          <Text className="text-white mb-2">Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            className="bg-white rounded-xl p-3 mb-6 text-gray-800"
+          />
+
+          <Text className="text-white mb-2">Phone Number</Text>
+          <TextInput
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            className="bg-white rounded-xl p-3 mb-6 text-gray-800"
+          />
+
+          {/* Password Section */}
+          <Text className="text-white mb-2">Current Password</Text>
+          <TextInput
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            secureTextEntry
+            className="bg-white rounded-xl p-3 mb-4 text-gray-800"
+          />
+          <Text className="text-white mb-2">New Password</Text>
+          <TextInput
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+            className="bg-white rounded-xl p-3 mb-4 text-gray-800"
+          />
+          <Text className="text-white mb-2">Confirm New Password</Text>
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            className="bg-white rounded-xl p-3 mb-6 text-gray-800"
+          />
+
+          {/* Save Button */}
+          <TouchableOpacity
+            className={`py-4 rounded-xl mt-4 ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
+            onPress={handleSave}
+            disabled={loading}
+          >
+            <Text className="text-center text-white text-lg font-semibold">
+              {loading ? "Saving..." : "Save Changes"}
+            </Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Input Fields */}
-        <Text className="text-white mb-2">Full Name</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          className="bg-white rounded-xl p-3 mb-6 text-gray-800"
-        />
-
-        <Text className="text-white mb-2">Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          className="bg-white rounded-xl p-3 mb-6 text-gray-800"
-        />
-
-        <Text className="text-white mb-2">Phone Number</Text>
-        <TextInput
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-          className="bg-white rounded-xl p-3 mb-6 text-gray-800"
-        />
-
-        {/* Password Section */}
-        <Text className="text-white mb-2">Current Password</Text>
-        <TextInput
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          secureTextEntry
-          className="bg-white rounded-xl p-3 mb-4 text-gray-800"
-        />
-        <Text className="text-white mb-2">New Password</Text>
-        <TextInput
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-          className="bg-white rounded-xl p-3 mb-4 text-gray-800"
-        />
-        <Text className="text-white mb-2">Confirm New Password</Text>
-        <TextInput
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          className="bg-white rounded-xl p-3 mb-6 text-gray-800"
-        />
-
-        {/* Save Button */}
-        <TouchableOpacity
-          className={`py-4 rounded-xl mt-4 ${loading ? "bg-gray-400" : "bg-[#00EAFF]"}`}
-          onPress={handleSave}
-          disabled={loading}
-        >
-          <Text className="text-center text-white text-lg font-semibold">
-            {loading ? "Saving..." : "Save Changes"}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Cancel */}
-        <TouchableOpacity
-          className="mt-4"
-          onPress={() => router.push("/customerTabs/Profile")}
-        >
-          <Text className="text-center text-gray-200">Cancel</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Cancel */}
+          <TouchableOpacity
+            className="mt-4"
+            onPress={() => router.push("/customerTabs/Profile")}
+          >
+            <Text className="text-center text-gray-200">Cancel</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }

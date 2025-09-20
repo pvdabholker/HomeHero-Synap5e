@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api, TokenStore } from "../../lib/api";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -30,28 +32,87 @@ export default function AdminLogin() {
 
     setLoading(true);
     try {
-      // 🔹 Placeholder for backend integration
-      // Example:
-      // const res = await fetch("http://your-backend.com/admin/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ phone, password }),
-      // });
-      // const data = await res.json();
-      // if (data.success) {
-      //   router.push("../admintabs/AdminDashboard");
-      // } else {
-      //   Alert.alert("Login Failed", data.message);
-      // }
+      // Call the backend login API for admin authentication
+      const response = await api.auth.login({
+        email_or_phone: phoneOrEmail.trim(),
+        password: password.trim(),
+      });
 
-      // Temporary success simulation
-      setTimeout(() => {
-        setLoading(false);
-        router.push("../admintabs/AdminDashboard");
-      }, 1500);
+      if (response && response.access_token) {
+        // Store the authentication token
+        await AsyncStorage.setItem("access_token", response.access_token);
+        await AsyncStorage.setItem(
+          "token_type",
+          response.token_type || "Bearer"
+        );
+
+        // Set token in TokenStore for immediate use
+        TokenStore.setTokens({
+          access_token: response.access_token,
+          refresh_token: response.refresh_token,
+        });
+
+        // Verify this is an admin user
+        try {
+          const userProfile = await api.users.me();
+
+          if (userProfile.user_type !== "admin") {
+            Alert.alert(
+              "Access Denied",
+              "This login is only for admin users. Please use the appropriate login page."
+            );
+            // Clear stored data
+            await AsyncStorage.multiRemove(["access_token", "token_type"]);
+            TokenStore.clear();
+            setLoading(false);
+            return;
+          }
+
+          // Store admin information
+          await AsyncStorage.setItem("userType", "admin");
+          await AsyncStorage.setItem("userName", userProfile.name || "Admin");
+          await AsyncStorage.setItem("userEmail", userProfile.email || "");
+          await AsyncStorage.setItem("userId", userProfile.id || "");
+          await AsyncStorage.setItem("isLoggedIn", "true");
+
+          Alert.alert("Success", "Admin login successful!", [
+            {
+              text: "OK",
+              onPress: () => {
+                router.dismissAll();
+                router.replace("../admintabs/AdminDashboard");
+              },
+            },
+          ]);
+        } catch (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          Alert.alert(
+            "Error",
+            "Failed to load admin profile. Please try again."
+          );
+        }
+      } else {
+        Alert.alert("Login Failed", "Invalid credentials. Please try again.");
+      }
     } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Something went wrong. Try again later.");
+      console.error("Admin login error:", error);
+
+      let errorMessage = "Something went wrong. Please try again.";
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Invalid email/phone or password.";
+        } else if (error.response.status === 404) {
+          errorMessage = "Account not found. Please check your credentials.";
+        } else if (error.response.data?.detail) {
+          errorMessage = error.response.data.detail;
+        }
+      } else if (error.request) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      }
+
+      Alert.alert("Login Failed", errorMessage);
+    } finally {
       setLoading(false);
     }
   };

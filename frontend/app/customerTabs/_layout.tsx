@@ -1,7 +1,16 @@
 import { Tabs } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { usePathname } from "expo-router";
 
 export default function CustomerTabsLayout() {
+  const pathname = usePathname();
+
+  // Check if current path is any booking step
+  const isInBookingFlow = pathname.includes("/bookSteps/");
+
+  // Check if current path is any profile page
+  const isInProfileFlow = pathname.includes("/profilePages/");
+
   return (
     <Tabs
       screenOptions={{
@@ -24,8 +33,15 @@ export default function CustomerTabsLayout() {
         options={{
           title: "Book",
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="event-note" size={22} color={color} />
+            <MaterialIcons
+              name="event-note"
+              size={22}
+              color={isInBookingFlow ? "#22d3ee" : color}
+            />
           ),
+          tabBarLabelStyle: {
+            color: isInBookingFlow ? "#22d3ee" : undefined,
+          },
         }}
       />
       <Tabs.Screen
@@ -43,8 +59,15 @@ export default function CustomerTabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person-outline" size={22} color={color} />
+            <Ionicons
+              name="person-outline"
+              size={22}
+              color={isInProfileFlow ? "#22d3ee" : color}
+            />
           ),
+          tabBarLabelStyle: {
+            color: isInProfileFlow ? "#22d3ee" : undefined,
+          },
         }}
       />
 
