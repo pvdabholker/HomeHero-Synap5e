@@ -291,3 +291,36 @@ async def provider_cancel_booking(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cancel booking: {str(e)}",
         )
+
+
+@router.post("/{booking_id}/complete", response_model=dict)
+async def complete_booking(
+    request: Request,
+    booking_id: str,
+    current_user: User = Depends(get_current_provider),
+    db: Session = Depends(get_db),
+):
+    """Mark booking as completed (Provider only)"""
+    booking = BookingController.get_booking(db, booking_id)
+    provider = ProviderController.get_provider_by_user(db, str(current_user.id))
+
+    # Verify this booking belongs to current provider
+    if str(booking.provider_id) != str(provider.provider_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
+
+    # Can only complete accepted bookings
+    if booking.status != BookingStatus.ACCEPTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot complete booking with status: {booking.status}. Must be accepted first.",
+        )
+
+    BookingController.update_booking_status(db, booking_id, BookingStatus.COMPLETED)
+
+    return {
+        "message": "Booking marked as completed",
+        "booking_id": str(booking.booking_id),
+        "status": "completed",
+    }

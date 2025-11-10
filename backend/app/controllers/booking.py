@@ -152,31 +152,32 @@ class BookingController:
 
     # reshedule booking to new date/time
     @staticmethod
-    def reshedule_booking(
+    def reschedule_booking(
         db: Session,
         booking_id: str,
         customer_id: str,
         new_date_time: datetime,
         reason: Optional[str] = None,
     ) -> Booking:
+        """Reschedule a booking to new date/time"""
         booking = BookingController.get_booking(db, booking_id)
 
-        # verify if customer owns this booking
+        # Verify customer owns this booking
         if str(booking.customer_id) != customer_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only reschedule your own bookings",
             )
 
-        # check if booking can be resheduled
+        # Check if booking can be rescheduled
         if booking.status not in [BookingStatus.PENDING, BookingStatus.ACCEPTED]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Cannot reschedule booking with status: {booking.status}",
             )
 
-        # check if new date is in the future
-        if new_date_time <= datetime.now(timezone.utc):
+        # Check if new date is in the future
+        if new_date_time <= datetime.utcnow():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="New booking date must be in the future",
@@ -184,7 +185,7 @@ class BookingController:
 
         old_date = booking.date_time
         booking.date_time = new_date_time
-        booking.status = BookingStatus.PENDING
+        booking.status = BookingStatus.PENDING  # Reset to pending for provider approval
 
         # Add reschedule note to special instructions
         reschedule_note = f"Rescheduled from {old_date.strftime('%Y-%m-%d %H:%M')}"
@@ -199,8 +200,10 @@ class BookingController:
         db.commit()
         db.refresh(booking)
 
-        # Notify provider about reschedule
+        # Notify provider about reschedule (optional)
         try:
+            from app.services.notifications import notification_service
+
             provider_user = booking.provider.user
             asyncio.create_task(
                 notification_service.send_sms(
