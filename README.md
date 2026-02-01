@@ -8,7 +8,7 @@ HomeHero is a community-based platform that helps residents in small towns easil
 
 ## Team Members
 
-- **Pranav Dabholker** *(Team Lead)* – [GitHub](https://github.com/pvdabholker) 
+- **Pranav Dabholker** – [GitHub](https://github.com/pvdabholker) 
 - **Sidhant Naik** – [GitHub](https://github.com/Sidnaik04)  
 - **Ivan Decunha** – [GitHub](https://github.com/Ivan-decunha)  
 - **Aryan Pagi** – [GitHub](https://github.com/Aryan-Pagi)  
